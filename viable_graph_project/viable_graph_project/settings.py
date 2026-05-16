@@ -79,8 +79,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',  # ต้องเป็นคำนี้ ไม่ใช่ sqlite3!
         'NAME': 'postgres',
         'USER': 'postgres',
-        'PASSWORD': 'your_password',
-        'HOST': 'db',
+        'PASSWORD': 'postgres',
+        'HOST': 'dbs',
         'PORT': '5432',
     }
 }
