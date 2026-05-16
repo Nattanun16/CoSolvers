@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'viable_graph_project.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',  # ต้องเป็นคำนี้ ไม่ใช่ sqlite3!
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'your_password',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
