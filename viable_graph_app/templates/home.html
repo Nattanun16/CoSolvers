@@ -78,28 +78,28 @@
             <div class="col-md-6 mb-4" id="report-form">
                 <div class="card p-4 shadow-sm h-100">
                     <h4 class="mb-4 text-dark fw-bold">📌 แจ้งปัญหากวนใจคุณ</h4>
-                    <form>
+                    <form method="post" action="{% url 'home' %}">
+                        {% csrf_token %}
                         <div class="mb-3">
                             <label class="form-label">หัวข้อปัญหา</label>
-                            <input type="text" class="form-control" placeholder="เช่น ไฟทางดับ, ถนนเป็นหลุมเป็นบ่อ">
+                            <input name="title" type="text" class="form-control" placeholder="เช่น ไฟทางดับ, ถนนเป็นหลุมเป็นบ่อ" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">หมวดหมู่ปัญหา</label>
-                            <select class="form-select">
-                                <option>ถนนและทางเท้า</option>
-                                <option>ไฟฟ้าสาธารณะ</option>
-                                <option>ขยะและสิ่งแวดล้อม</option>
-                                <option>ความปลอดภัย</option>
-                                <option>อื่นๆ</option>
+                            <select name="category" class="form-select">
+                                <option value="ROADS">ถนนและทางเท้า</option>
+                                <option value="LIGHTS">ไฟฟ้าสาธารณะ</option>
+                                <option value="WASTE">ขยะและสิ่งแวดล้อม</option>
+                                <option value="SAFETY">ความปลอดภัย</option>
+                                <option value="OTHERS">อื่นๆ</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">รายละเอียดเพิ่มเติม</label>
-                            <textarea class="form-control" rows="4"
-                                placeholder="ระบุตำแหน่งที่ตั้ง หรือรายละเอียดของปัญหาที่พบ..."></textarea>
+                            <textarea name="description" class="form-control" rows="4"
+                                placeholder="ระบุตำแหน่งที่ตั้ง หรือรายละเอียดของปัญหาที่พบ..." required></textarea>
                         </div>
-                        <button type="button" class="btn btn-primary w-100 btn-lg"
-                            onclick="alert('ขอบคุณสำหรับข้อมูล! ระบบกำลังจำลองส่งข้อมูลไปยังฐานข้อมูล PostgreSQL')">ส่งรายงานปัญหา</button>
+                        <button type="submit" class="btn btn-primary w-100 btn-lg">ส่งรายงานปัญหา</button>
                     </form>
                 </div>
             </div>

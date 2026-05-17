@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.db.models import Count
 from .models import Problem
@@ -6,6 +6,15 @@ from .models import Problem
 
 # 1. หน้าแรกปกติ (เรนเดอร์หน้า home.html)
 def home_view(request):
+    if request.method == "POST":
+        title = request.POST.get("title", "").strip()
+        category = request.POST.get("category", "ROADS")
+        description = request.POST.get("description", "").strip()
+
+        if title and description:
+            Problem.objects.create(title=title, category=category, description=description)
+            return redirect("home")
+
     # ดึงข้อมูลปัญล่าสุด 5 อันดับแรกไปโชว์ที่หน้าเว็บด้วย
     recent_problems = Problem.objects.all().order_by("-created_at")[:5]
     context = {"recent_problems": recent_problems}
