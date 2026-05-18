@@ -5,125 +5,732 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Viable Graph</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --nav-height: 64px;
         }
 
-        .hero-section {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #0a0a0f;
             color: white;
-            padding: 60px 0;
-            margin-bottom: 30px;
+            min-height: 100vh;
+        }
+
+        /* ── NAVBAR ── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            height: var(--nav-height);
+            padding: 0 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+            backdrop-filter: none;
+            border: none;
+        }
+
+        .navbar-brand-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 0.1em;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2.2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.88);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 400;
+            letter-spacing: 0.03em;
+            transition: color 0.2s, text-decoration 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: #ffffff;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+
+        /* ── DROPDOWN ── */
+        .nav-item {
+            position: relative;
+        }
+
+        .dropdown-menu-custom {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            background: #1a2a6c;
+            border: none;
+            border-radius: 0;
+            min-width: 200px;
+            z-index: 200;
+            overflow: hidden;
+        }
+
+        .dropdown-menu-custom a {
+            display: block;
+            padding: 0.7rem 1.1rem;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 0.92rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            transition: background 0.15s;
+        }
+
+        .dropdown-menu-custom a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu-custom a:hover {
+            background: rgba(255, 255, 255, 0.12);
+            text-decoration: none;
+        }
+
+        .nav-item:hover .dropdown-menu-custom,
+        .nav-item:focus-within .dropdown-menu-custom {
+            display: block;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background-image: url('{% static "images/homepage.jpg" %}');
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.72) saturate(1.15);
+            z-index: 0;
+        }
+
+        /* purple/pink colour-wash overlay matching the mockup */
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(160deg,
+                    rgba(90, 20, 120, 0.35) 0%,
+                    rgba(180, 60, 140, 0.22) 40%,
+                    rgba(10, 10, 30, 0.45) 100%);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 0 1rem;
+            animation: fadeUp 0.9s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(32px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(5rem, 15vw, 13rem);
+            line-height: 0.92;
+            letter-spacing: 0.01em;
+            color: #ffffff;
+            text-shadow: 0 4px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ── SEARCH BAR ── */
+        .search-wrap {
+            width: min(560px, 90vw);
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.12);
+            border: 2px solid rgba(255, 255, 255, 0.75);
+            border-radius: 50px;
+            padding: 0.65rem 1.4rem;
+            backdrop-filter: blur(12px);
+            transition: background 0.25s, border-color 0.25s;
+        }
+
+        .search-box:focus-within {
+            background: rgba(255, 255, 255, 0.22);
+            border-color: #ffffff;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 300;
+        }
+
+        .search-box input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-box button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.85);
+            transition: color 0.2s;
+        }
+
+        .search-box button:hover {
+            color: #ffffff;
+        }
+
+        .search-box svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* ── STATS SECTION (below hero) ── */
+        .stats-section {
+            background: #0e0e18;
+            padding: 3rem 0;
         }
 
         .stat-card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s;
+            background: #18182a;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            line-height: 1;
+            margin-bottom: 0.4rem;
+        }
+
+        .stat-label {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 300;
+        }
+
+        /* ── REPORT FORM SECTION ── */
+        .form-section {
+            background: #0a0a0f;
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.4rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.8rem;
+            color: white;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 18px;
+            padding: 2.2rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .form-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 0.4rem;
+        }
+
+        .form-control,
+        .form-select {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 10px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            color: white;
+            box-shadow: none;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .form-select option {
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .btn-submit {
+            background: white;
+            color: #0a0a0f;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.75rem;
+            width: 100%;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+        }
+
+        .btn-submit:hover {
+            background: rgba(255, 255, 255, 0.88);
+            transform: translateY(-2px);
+        }
+
+        /* chart placeholder */
+        .chart-placeholder {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .chart-placeholder .icon {
+            font-size: 2.5rem;
+        }
+
+        .chart-placeholder p {
+            font-size: 0.85rem;
+            text-align: center;
+            max-width: 260px;
+        }
+
+        /* ── DROPDOWN ── */
+        .nav-item {
+            position: relative;
+        }
+
+        .dropdown-menu-custom {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: #1a2a5e;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            min-width: 200px;
+            overflow: hidden;
+            z-index: 200;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: dropIn 0.18s ease both;
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .nav-item:hover .dropdown-menu-custom,
+        .nav-item:focus-within .dropdown-menu-custom {
+            display: block;
+        }
+
+        .dropdown-menu-custom a {
+            display: block;
+            padding: 0.7rem 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.93rem;
+            font-weight: 400;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            transition: background 0.15s;
+        }
+
+        .dropdown-menu-custom a:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-menu-custom a:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        /* ── CONTENT SECTIONS ── */
+        .content-section {
+            background: #0e0e18;
+            padding: 5rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .content-section:nth-child(even) {
+            background: #0a0a0f;
+        }
+
+        .content-section .section-tag {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 0.75rem;
+        }
+
+        .content-section h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            letter-spacing: 0.04em;
+            color: white;
+            margin-bottom: 1.2rem;
+        }
+
+        .content-section p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            font-weight: 300;
+            line-height: 1.8;
+            max-width: 640px;
+        }
+
+        .section-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+        }
+
+        /* ── ALERTS ── */
+        .alert {
+            border-radius: 10px;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background: #06060c;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            text-align: center;
+            padding: 1.5rem;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.82rem;
         }
     </style>
 </head>
 
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">📊 Viable Graph</a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link active" href="/">หน้าแรก</a>
-                <a class="nav-link" href="/admin">ระบบหลังบ้าน (Admin)</a>
-            </div>
-        </div>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a class="navbar-brand-text" href="/">Viable Graph</a>
+        <ul class="nav-links">
+            <li class="nav-item"><a href="/" class="active">Home</a></li>
+            <li class="nav-item">
+                <a href="#about-us" onclick="smoothScroll(event,'about-us')">Purpose</a>
+                <div class="dropdown-menu-custom">
+                    <a href="#about-us" onclick="smoothScroll(event,'about-us')">about us</a>
+                    <a href="{% url 'propose_solution' %}">purpose solution</a>
+                    <a href="{% url 'graph' %}">graph</a>
+                </div>
+            </li>
+            <li class="nav-item"><a href="{% url 'login' %}">Log In</a></li>
+            <li class="nav-item"><a href="{% url 'logout' %}">Log Out</a></li>
+        </ul>
     </nav>
 
-    <header class="hero-section text-center">
-        <div class="container">
-            <h1 class="display-4 fw-bold">ร่วมสร้างเมืองที่น่าอยู่ด้วยมือคุณ</h1>
-            <p class="lead">รายงานปัญหาชุมชน เสนอแนะแนวทางแก้ไข และติดตามการทำงานของภาครัฐอย่างโปร่งใส</p>
-            <a href="#report-form" class="btn btn-warning btn-lg mt-3 fw-bold">👉 แจ้งเรื่องร้องเรียนใหม่</a>
-        </div>
-    </header>
-
-    <div class="container">
-        <section class="row text-center mb-5">
-            <div class="col-md-4 mb-3">
-                <div class="card stat-card p-4 bg-white text-dark">
-                    <h3 class="text-primary fw-bold">1,245</h3>
-                    <p class="text-muted mb-0">เรื่องร้องเรียนทั้งหมด</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card stat-card p-4 bg-white text-dark">
-                    <h3 class="text-warning fw-bold">432</h3>
-                    <p class="text-muted mb-0">กำลังดำเนินการแก้ไข</p>
-                </div>
-            </div>
-            <div class="col-md-4 mb-3">
-                <div class="card stat-card p-4 bg-white text-dark">
-                    <h3 class="text-success fw-bold">813</h3>
-                    <p class="text-muted mb-0">แก้ไขเสร็จสิ้นแล้ว</p>
-                </div>
-            </div>
-        </section>
-
-        <div class="row">
-            <div class="col-md-6 mb-4" id="report-form">
-                <div class="card p-4 shadow-sm h-100">
-                    <h4 class="mb-4 text-dark fw-bold">📌 แจ้งปัญหากวนใจคุณ</h4>
-                    <form method="post" action="{% url 'home' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">หัวข้อปัญหา</label>
-                            <input name="title" type="text" class="form-control" placeholder="เช่น ไฟทางดับ, ถนนเป็นหลุมเป็นบ่อ" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">หมวดหมู่ปัญหา</label>
-                            <select name="category" class="form-select">
-                                <option value="ROADS">ถนนและทางเท้า</option>
-                                <option value="LIGHTS">ไฟฟ้าสาธารณะ</option>
-                                <option value="WASTE">ขยะและสิ่งแวดล้อม</option>
-                                <option value="SAFETY">ความปลอดภัย</option>
-                                <option value="OTHERS">อื่นๆ</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">รายละเอียดเพิ่มเติม</label>
-                            <textarea name="description" class="form-control" rows="4"
-                                placeholder="ระบุตำแหน่งที่ตั้ง หรือรายละเอียดของปัญหาที่พบ..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 btn-lg">ส่งรายงานปัญหา</button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-md-6 mb-4">
-                <div
-                    class="card p-4 shadow-sm h-100 text-center d-flex flex-column justify-content-center align-items-center bg-light">
-                    <div class="p-3 bg-white rounded shadow-sm w-100 mb-3"
-                        style="min-height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <span class="text-muted">[ 📊 พื้นที่สำหรับวาง Chart.js / กราฟสถิติแยกประเภทปัญหา ]</span>
-                    </div>
-                    <h5 class="fw-bold text-dark">พื้นที่วิเคราะห์ข้อมูล (Data Visualization)</h5>
-                    <p class="text-muted small">เมื่อทีมงานผูกโค้ดดึงข้อมูลหลังบ้าน (API) จาก PostgreSQL สำเร็จ
-                        จะใช้พื้นที่ตรงนี้ในการพล็อตกราฟไดนามิกแสดงพิกัดและสัดส่วนปัญหาในชุมชน</p>
-                </div>
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1 class="hero-title">Viable Graph</h1>
+            <div class="search-wrap">
+                <form method="get" action="/" class="search-box">
+                    <input type="text" name="q" placeholder="Search for your problem here">
+                    <button type="submit" aria-label="Search">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.2">
+                            <circle cx="11" cy="11" r="7" />
+                            <line x1="16.5" y1="16.5" x2="22" y2="22" />
+                        </svg>
+                    </button>
+                </form>
             </div>
         </div>
+    </section>
+
+    <!-- FLASH MESSAGES -->
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <p class="mb-0 small">© 2026 CivicTech Web Application - พัฒนาด้วย Django & Docker</p>
+    <!-- STATS -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row g-3 text-center">
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number text-primary">{{ total_problems }}</div>
+                        <div class="stat-label">เรื่องร้องเรียนทั้งหมด</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number text-warning">{{ progress_problems }}</div>
+                        <div class="stat-label">กำลังดำเนินการแก้ไข</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card">
+                        <div class="stat-number text-success">{{ completed_problems }}</div>
+                        <div class="stat-label">แก้ไขเสร็จสิ้นแล้ว</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- REPORT FORM + CHART -->
+    <section class="form-section" id="report-form">
+        <div class="container">
+            <div class="row g-4">
+
+                <!-- Form -->
+                <div class="col-md-6">
+                    <div class="glass-card h-100">
+                        <h4 class="section-title">📌 แจ้งปัญหากวนใจคุณ</h4>
+                        <form method="post" action="{% url 'home' %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">หัวข้อปัญหา</label>
+                                <input name="title" type="text" class="form-control"
+                                    placeholder="เช่น ไฟทางดับ, ถนนเป็นหลุมเป็นบ่อ" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">หมวดหมู่ปัญหา</label>
+                                <select name="category" class="form-select">
+                                    <option value="ROADS">ถนนและทางเท้า</option>
+                                    <option value="LIGHTS">ไฟฟ้าสาธารณะ</option>
+                                    <option value="WASTE">ขยะและสิ่งแวดล้อม</option>
+                                    <option value="SAFETY">ความปลอดภัย</option>
+                                    <option value="OTHERS">อื่นๆ</option>
+                                </select>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">รายละเอียดเพิ่มเติม</label>
+                                <textarea name="description" class="form-control" rows="4"
+                                    placeholder="ระบุตำแหน่งที่ตั้ง หรือรายละเอียดของปัญหาที่พบ..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn-submit">ส่งรายงานปัญหา</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="col-md-6">
+                    <div class="glass-card h-100 d-flex flex-column justify-content-between">
+                        <h4 class="section-title">📊 วิเคราะห์ข้อมูล</h4>
+                        <div class="chart-placeholder flex-grow-1">
+                            <span class="icon">📈</span>
+                            <p>เมื่อทีมงานผูกโค้ดดึงข้อมูลหลังบ้าน (API) จาก PostgreSQL สำเร็จ
+                                จะใช้พื้นที่ตรงนี้ในการพล็อตกราฟไดนามิก</p>
+                        </div>
+                        <p class="mt-3 mb-0" style="color:rgba(255,255,255,0.3); font-size:0.8rem;">
+                            Data Visualization · Chart.js · PostgreSQL
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT US -->
+    <section class="content-section" id="about-us">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-md-6">
+                    <span class="section-icon">🏛️</span>
+                    <p class="section-tag">Who We Are</p>
+                    <h2>About Us</h2>
+                    <p>Viable Graph คือแพลตฟอร์ม CivicTech ที่เชื่อมโยงประชาชนกับภาครัฐ
+                        เพื่อสร้างชุมชนที่น่าอยู่อย่างโปร่งใสและมีส่วนร่วม
+                        พัฒนาโดยทีมนักศึกษาที่มุ่งมั่นแก้ปัญหาในชุมชนด้วยเทคโนโลยี</p>
+                </div>
+                <div class="col-md-6">
+                    <div class="glass-card" style="padding:2rem;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem;">
+                            <div
+                                style="text-align:center; padding:1rem; background:rgba(255,255,255,0.04); border-radius:12px;">
+                                <div style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:#60a5fa;">100%
+                                </div>
+                                <div style="font-size:0.8rem; color:rgba(255,255,255,0.45);">Open Source</div>
+                            </div>
+                            <div
+                                style="text-align:center; padding:1rem; background:rgba(255,255,255,0.04); border-radius:12px;">
+                                <div style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; color:#34d399;">Free
+                                </div>
+                                <div style="font-size:0.8rem; color:rgba(255,255,255,0.45);">ไม่มีค่าใช้จ่าย</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PURPOSE SOLUTION -->
+    <section class="content-section" id="purpose-solution">
+        <div class="container">
+            <span class="section-icon">🎯</span>
+            <p class="section-tag">Why We Exist</p>
+            <h2>Purpose Solution</h2>
+            <p>เราเชื่อว่าทุกปัญหาในชุมชนมีทางออก ระบบของเราช่วยให้ประชาชนแจ้งปัญหาได้ง่ายดาย ติดตามสถานะแบบ real-time
+                และภาครัฐสามารถจัดลำดับความสำคัญของปัญหาได้อย่างมีประสิทธิภาพ
+                ลดช่องว่างระหว่างประชาชนและผู้มีอำนาจตัดสินใจ</p>
+            <div class="row g-3 mt-4">
+                <div class="col-md-4">
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div style="font-size:1.8rem; margin-bottom:0.75rem;">📢</div>
+                        <div style="font-weight:600; margin-bottom:0.4rem;">แจ้งปัญหา</div>
+                        <div style="font-size:0.85rem; color:rgba(255,255,255,0.5);">ส่งรายงานปัญหาชุมชนได้ทันที
+                            ไม่ต้องรอ</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div style="font-size:1.8rem; margin-bottom:0.75rem;">🔍</div>
+                        <div style="font-weight:600; margin-bottom:0.4rem;">ติดตามสถานะ</div>
+                        <div style="font-size:0.85rem; color:rgba(255,255,255,0.5);">เช็กความคืบหน้าการแก้ไขแบบ
+                            real-time</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="glass-card" style="padding:1.5rem;">
+                        <div style="font-size:1.8rem; margin-bottom:0.75rem;">✅</div>
+                        <div style="font-weight:600; margin-bottom:0.4rem;">รับทราบผล</div>
+                        <div style="font-size:0.85rem; color:rgba(255,255,255,0.5);">
+                            ได้รับแจ้งเมื่อปัญหาได้รับการแก้ไขแล้ว</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GRAPH -->
+    <section class="content-section" id="graph">
+        <div class="container">
+            <span class="section-icon">📊</span>
+            <p class="section-tag">Data Visualization</p>
+            <h2>Graph</h2>
+            <p>ข้อมูลทุกปัญหาในชุมชนถูกแสดงผลเป็นกราฟแบบ dynamic เพื่อให้เห็นภาพรวมของสถานการณ์ในพื้นที่ได้ชัดเจน
+                ทั้งสัดส่วนประเภทปัญหา พิกัดที่เกิดเหตุ และแนวโน้มการแก้ไขในแต่ละช่วงเวลา</p>
+            <div class="glass-card mt-4" style="padding:2rem;">
+                <div class="chart-placeholder" style="min-height:280px;">
+                    <span class="icon">📈</span>
+                    <p>กราฟ interactive จะแสดงเมื่อเชื่อมต่อ PostgreSQL API สำเร็จ</p>
+                    <span style="font-size:0.78rem; color:rgba(255,255,255,0.25);">Chart.js · PostgreSQL · Django
+                        REST</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        © 2026 Viable Graph · CivicTech Web Application · พัฒนาด้วย Django &amp; Docker
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+    <script>
+        function smoothScroll(e, id) {
+            e.preventDefault();
+            const el = document.getElementById(id);
+            if (!el) return;
+            const navHeight = document.querySelector('.navbar').offsetHeight;
+            const top = el.getBoundingClientRect().top + window.scrollY - navHeight - 16;
+            window.scrollTo({ top, behavior: 'smooth' });
+            // close dropdown
+            document.activeElement.blur();
+        }
+    </script>
 
 </html>
