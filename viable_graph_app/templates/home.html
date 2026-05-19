@@ -527,41 +527,10 @@
         </div>
     </section>
 
-    <!-- REPORT FORM + CHART -->
+    <!-- CHART -->
     <section class="form-section" id="report-form">
         <div class="container">
             <div class="row g-4">
-
-                <!-- Form -->
-                <div class="col-md-6">
-                    <div class="glass-card h-100">
-                        <h4 class="section-title">📌 แจ้งปัญหากวนใจคุณ</h4>
-                        <form method="post" action="{% url 'home' %}">
-                            {% csrf_token %}
-                            <div class="mb-3">
-                                <label class="form-label">หัวข้อปัญหา</label>
-                                <input name="title" type="text" class="form-control"
-                                    placeholder="เช่น ไฟทางดับ, ถนนเป็นหลุมเป็นบ่อ" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">หมวดหมู่ปัญหา</label>
-                                <select name="category" class="form-select">
-                                    <option value="ROADS">ถนนและทางเท้า</option>
-                                    <option value="LIGHTS">ไฟฟ้าสาธารณะ</option>
-                                    <option value="WASTE">ขยะและสิ่งแวดล้อม</option>
-                                    <option value="SAFETY">ความปลอดภัย</option>
-                                    <option value="OTHERS">อื่นๆ</option>
-                                </select>
-                            </div>
-                            <div class="mb-4">
-                                <label class="form-label">รายละเอียดเพิ่มเติม</label>
-                                <textarea name="description" class="form-control" rows="4"
-                                    placeholder="ระบุตำแหน่งที่ตั้ง หรือรายละเอียดของปัญหาที่พบ..." required></textarea>
-                            </div>
-                            <button type="submit" class="btn-submit">ส่งรายงานปัญหา</button>
-                        </form>
-                    </div>
-                </div>
 
                 <!-- Chart -->
                 <div class="col-md-6">
@@ -572,7 +541,7 @@
                             <p>เมื่อทีมงานผูกโค้ดดึงข้อมูลหลังบ้าน (API) จาก PostgreSQL สำเร็จ
                                 จะใช้พื้นที่ตรงนี้ในการพล็อตกราฟไดนามิก</p>
                         </div>
-                        <p class="mt-3 mb-0" style="color:rgba(255,255,255,0.3); font-size:0.8rem;">
+                        <p class="mt-3 mb-0" style="color:rgba(255,255,255,0.3); font-size:0.8rem; display: flex; place-items: initial;">
                             Data Visualization · Chart.js · PostgreSQL
                         </p>
                     </div>
@@ -589,7 +558,7 @@
         <div class="container">
             <span class="section-icon">🎯</span>
             <p class="section-tag">Why We Exist</p>
-            <h2>Purpose Solution</h2>
+            <h2>Propose Solution</h2>
             <p>เราเชื่อว่าทุกปัญหาในชุมชนมีทางออก ระบบของเราช่วยให้ประชาชนแจ้งปัญหาได้ง่ายดาย ติดตามสถานะแบบ real-time
                 และภาครัฐสามารถจัดลำดับความสำคัญของปัญหาได้อย่างมีประสิทธิภาพ
                 ลดช่องว่างระหว่างประชาชนและผู้มีอำนาจตัดสินใจ</p>
