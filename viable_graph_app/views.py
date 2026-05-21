@@ -1,8 +1,12 @@
+import requests
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.db.models import Count
 from .models import Problem
+from django.conf import settings
 
 
 # 1. หน้าแรกปกติ (เรนเดอร์หน้า home.html)
@@ -68,10 +72,6 @@ def graph(request):
     return render(request, "graph.html")
 
 
-def login(request):
-    return render(request, "login.html")
-
-
 def logout(request):
     return redirect("home")
 
@@ -102,3 +102,58 @@ def propose_solutions_2(request):
 
 def reset_pass(request):
     return render(request, "reset_pass.html")
+
+
+def login(request):
+    context = {"RECAPTCHA_SITE_KEY": settings.RECAPTCHA_SITE_KEY}
+
+    if not settings.RECAPTCHA_SITE_KEY or settings.RECAPTCHA_SITE_KEY.startswith(
+        "YOUR_"
+    ):
+        messages.error(request, "reCAPTCHA ยังไม่ได้ตั้งค่า")
+        return render(request, "login.html", context)
+
+    if request.method == "POST":
+        # 1. ตรวจ reCAPTCHA ก่อน
+        token = request.POST.get("g-recaptcha-response", "")
+        if not token:
+            messages.error(request, "กรุณายืนยัน reCAPTCHA ก่อน")
+            return render(request, "login.html", context)
+
+        try:
+            response = requests.post(
+                "https://www.google.com/recaptcha/api/siteverify",
+                data={
+                    "secret": settings.RECAPTCHA_SECRET_KEY,
+                    "response": token,
+                    "remoteip": request.META.get("REMOTE_ADDR", ""),
+                },
+                timeout=5,
+            )
+            result = response.json() if response.ok else {}
+        except requests.RequestException:
+            messages.error(request, "ไม่สามารถยืนยัน reCAPTCHA ได้ กรุณาลองใหม่")
+            return render(request, "login.html", context)
+
+        if not result.get("success"):
+            messages.error(request, "reCAPTCHA ไม่ผ่าน กรุณาลองใหม่")
+            return render(request, "login.html", context)
+
+        # 2. ✅ ตรวจ student_id / password จริง ๆ
+        student_id = request.POST.get("student_id", "").strip()
+        password = request.POST.get("password", "")
+
+        if not student_id or not password:
+            messages.error(request, "กรุณากรอก Student ID และรหัสผ่าน")
+            return render(request, "login.html", context)
+
+        user = authenticate(request, username=student_id, password=password)
+
+        if user is not None:
+            auth_login(request, user)
+            return redirect("home")
+        else:
+            messages.error(request, "Student ID หรือรหัสผ่านไม่ถูกต้อง")
+            return render(request, "login.html", context)
+
+    return render(request, "login.html", context)

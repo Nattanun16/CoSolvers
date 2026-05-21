@@ -40,3 +40,5 @@ ENV/
 
 # Docker
 docker-volume/
+.env
+.env.*

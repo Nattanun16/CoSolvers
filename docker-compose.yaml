@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     volumes:
       - .:/app
     ports:
@@ -11,6 +13,8 @@ services:
       - dbs
     environment:
       - DJANGO_SETTINGS_MODULE=viable_graph_project.settings
+      - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
+      - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
 
   dbs:
     image: postgres:16

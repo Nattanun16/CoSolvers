@@ -8,10 +8,10 @@ COPY . /app
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python manage.py collectstatic --noinput || true
+RUN python viable_graph_project/manage.py collectstatic --noinput || true
 
 EXPOSE 8000
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["sh", "-c", "cd /app/viable_graph_project && python manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python viable_graph_project/manage.py collectstatic --noinput && python viable_graph_project/manage.py runserver 0.0.0.0:8000"]
