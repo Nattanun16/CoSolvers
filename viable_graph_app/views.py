@@ -1,5 +1,6 @@
 import requests
 from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -73,6 +74,7 @@ def graph(request):
 
 
 def logout(request):
+    auth_logout(request)
     return redirect("home")
 
 

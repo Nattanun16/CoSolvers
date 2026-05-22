@@ -330,7 +330,7 @@
             </div>
             {% endif %}
 
-            <form class="login-form" method="post" action="{% url 'login' %}">
+            <form class="login-form" method="post" action="{% url 'login' %}" onsubmit="return checkForm(event)">
                 {% csrf_token %}
                 <label class="input-group">
                     <span class="input-icon">👤</span>
@@ -354,12 +354,34 @@
                 line-height: 1.6;">
                 </div>
 
-                <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+                <script src="https://www.google.com/recaptcha/api.js" async defer>
+                    function checkForm(e) {
+                        const token = grecaptcha.getResponse();
+                        if (!token) {
+                            e.preventDefault();
+                            const errorBox = document.getElementById('recaptcha-error');
+                            errorBox.style.display = 'block';
+                            return false;
+                        }
+                        document.getElementById('recaptcha-error').style.display = 'none';
+                        return true;
+                    }
+                </script>
 
                 <div class="bot-check">
                     <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}" data-theme="dark"></div>
                 </div>
-
+                <div id="recaptcha-error" style="
+                display: none;
+                color: #ff6e71;
+                font-size: 0.85rem;
+                padding: 0.6rem 1rem;
+                background: rgba(255, 110, 113, 0.12);
+                border: 1px solid rgba(255, 110, 113, 0.5);
+                border-radius: 12px;
+                ">
+                • กรุณากาช่อง "ฉันไม่ใช่โปรแกรมอัตโนมัติ" ก่อนล็อกอิน
+                </div>
                 <button type="submit" class="login-button">Log In</button>
 
                 <div class="login-footer">
