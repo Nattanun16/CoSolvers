@@ -1,5 +1,6 @@
 import requests
 import random
+import re
 from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.models import User
@@ -10,6 +11,7 @@ from django.db.models import Count
 from .models import Problem
 from django.conf import settings
 from django.core.mail import send_mail
+from django.contrib.auth.decorators import login_required
 
 
 # 1. หน้าแรกปกติ (เรนเดอร์หน้า home.html)
@@ -81,7 +83,108 @@ def logout(request):
 
 
 def sign_up(request):
-    return render(request, "sign_up.html")
+    context = {"RECAPTCHA_SITE_KEY": settings.RECAPTCHA_SITE_KEY}
+
+    if request.method == "POST":
+        # Validate reCAPTCHA server-side
+        if not settings.RECAPTCHA_SITE_KEY or settings.RECAPTCHA_SITE_KEY.startswith(
+            "YOUR_"
+        ):
+            messages.error(request, "reCAPTCHA ยังไม่ได้ตั้งค่า")
+            return render(request, "sign_up.html", context)
+
+        token = request.POST.get("g-recaptcha-response", "")
+        if not token:
+            messages.error(request, "กรุณายืนยัน reCAPTCHA ก่อนสมัคร")
+            return render(request, "sign_up.html", context)
+
+        try:
+            response = requests.post(
+                "https://www.google.com/recaptcha/api/siteverify",
+                data={
+                    "secret": settings.RECAPTCHA_SECRET_KEY,
+                    "response": token,
+                    "remoteip": request.META.get("REMOTE_ADDR", ""),
+                },
+                timeout=5,
+            )
+            result = response.json() if response.ok else {}
+        except requests.RequestException:
+            messages.error(request, "ไม่สามารถยืนยัน reCAPTCHA ได้ กรุณาลองใหม่")
+            return render(request, "sign_up.html", context)
+
+        if not result.get("success"):
+            messages.error(request, "reCAPTCHA ไม่ผ่าน กรุณาลองใหม่")
+            return render(request, "sign_up.html", context)
+
+        student_id = request.POST.get("student_id", "").strip()
+        email = request.POST.get("email", "").strip()
+        password = request.POST.get("password", "")
+        faculty = request.POST.get("faculty", "").strip()
+
+        if not student_id or not email or not password or not faculty:
+            messages.error(request, "กรุณากรอกข้อมูลทุกช่องให้ครบถ้วน")
+            return render(request, "sign_up.html", context)
+
+        # Server-side password complexity check
+        pw = password or ""
+        if (
+            len(pw) < 8
+            or not re.search(r"[A-Z]", pw)
+            or not re.search(r"[a-z]", pw)
+            or not re.search(r"[0-9]", pw)
+            or not re.search(r"[^A-Za-z0-9]", pw)
+        ):
+            messages.error(
+                request,
+                "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร และประกอบด้วย ตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษ",
+            )
+            return render(request, "sign_up.html", context)
+
+        if User.objects.filter(username=student_id).exists():
+            messages.error(request, "Student ID นี้ถูกใช้งานแล้ว")
+            return render(request, "sign_up.html", context)
+
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "อีเมลนี้ถูกใช้งานแล้ว")
+            return render(request, "sign_up.html", context)
+
+        user = User.objects.create_user(
+            username=student_id,
+            email=email,
+            password=password,
+        )
+        user.profile.faculty = faculty
+        user.profile.save()
+        auth_login(request, user)
+        messages.success(request, "สมัครสมาชิกสำเร็จ และล็อกอินเข้าสู่ระบบแล้ว")
+        return redirect("profile")
+
+    return render(request, "sign_up.html", context)
+
+
+@login_required(login_url="login")
+def profile(request):
+    my_problems = Problem.objects.filter(reported_by=request.user)
+    return render(
+        request,
+        "profile.html",
+        {
+            "my_problems": my_problems,
+            "score": 0,
+            "my_purposes": [],
+        },
+    )
+
+
+# upload photo
+@login_required(login_url="login")
+def upload_photo(request):
+    if request.method == "POST" and request.FILES.get("photo"):
+        request.user.profile.photo = request.FILES["photo"]
+        request.user.profile.save()
+        return JsonResponse({"success": True})
+    return JsonResponse({"success": False})
 
 
 def about_us(request):

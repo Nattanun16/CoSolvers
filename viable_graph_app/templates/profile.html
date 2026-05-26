@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile – Viable Graph</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        font-family: 'Outfit', sans-serif;
+        background: #ffb3d9;
+        min-height: 100vh;
+        color: #1a1a1a;
+      }
+      
+      /* ── NAVBAR ── */
+      .navbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 2.5rem;
+        background: transparent;
+      }
+      
+      .navbar-brand {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 2.2rem;
+        color: #ffffff;
+        letter-spacing: 0.06em;
+        text-decoration: none;
+      }
+      
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+      
+      .nav-links a {
+        color: #1a1a1a;
+        text-decoration: none;
+        font-size: 1rem;
+        font-weight: 500;
+        transition: color 0.2s;
+      }
+      
+      .nav-links a:hover,
+      .nav-links a.active {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+      }
+      
+      /* ── MAIN LAYOUT ── */
+      .main-layout {
+        display: flex;
+        min-height: calc(100vh - 70px);
+      }
+      
+      /* ── LEFT SIDEBAR ── */
+      .sidebar {
+        width: 280px;
+        min-width: 280px;
+        background: #ff69b4;
+        border-radius: 0 32px 32px 0;
+        padding: 2rem 1.5rem 2rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.2rem;
+        position: relative;
+      }
+      
+      .bell-icon {
+        font-size: 1.6rem;
+        color: #a0005a;
+        cursor: pointer;
+        margin-bottom: 0.5rem;
+      }
+      
+      /* avatar */
+      .avatar-wrap {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        border: 3px solid #1a1a1a;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        overflow: hidden;
+        transition: opacity 0.2s;
+        align-self: center;
+        margin-bottom: 0.5rem;
+      }
+      
+      .avatar-wrap:hover {
+        opacity: 0.85;
+      }
+      
+      .avatar-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .avatar-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .avatar-placeholder svg {
+        width: 80%;
+        height: 80%;
+      }
+      
+      .info-label {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #c0005a;
+        margin-bottom: 0.2rem;
+      }
+      
+      .info-box {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 2px solid #1a1a1a;
+        background: #ffffff;
+        font-size: 0.95rem;
+        color: #c0005a;
+        font-weight: 500;
+        word-break: break-all;
+      }
+      
+      /* ── RIGHT CONTENT ── */
+      .content-area {
+        flex: 1;
+        padding: 1.5rem 2.5rem;
+        background: #ffcce8;
+        position: relative;
+      }
+      
+      /* tabs pill */
+      .tabs-wrap {
+        position: absolute;
+        left: -1px;
+        top: 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      
+      .tab-pill {
+        writing-mode: horizontal-tb;
+        background: #ff69b4;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 0.7rem 1rem;
+        border-radius: 0 20px 20px 0;
+        cursor: pointer;
+        transition: background 0.2s;
+        text-align: center;
+        min-width: 80px;
+        line-height: 1.3;
+      }
+      
+      .tab-pill.active,
+      .tab-pill:hover {
+        background: #e0006a;
+      }
+      
+      /* tab content */
+      .tab-content {
+        display: none;
+        padding-left: 5rem;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      
+      /* ── MY PROBLEMS ── */
+      .section-title {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 3rem;
+        color: #e0006a;
+        letter-spacing: 0.05em;
+        margin-bottom: 1.4rem;
+        text-align: right;
+      }
+      
+      .problems-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+      }
+      
+      .problem-card {
+        background: #ffffff;
+        border: 2px solid #1a1a1a;
+        border-radius: 16px;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      
+      .problem-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+      }
+      
+      .problem-card-img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        background: linear-gradient(180deg, #b8e8ff 0%, #7dd87d 70%, #4a9a4a 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .problem-card-img svg {
+        width: 80%;
+        height: 80%;
+      }
+      
+      .problem-card-body {
+        padding: 0.6rem 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.4rem;
+      }
+      
+      .problem-name {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: #1a1a1a;
+      }
+      
+      .status-completed {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #00a040;
+      }
+      
+      .check-badge {
+        width: 2rem;
+        height: 2rem;
+        background: #00c050;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1rem;
+        position: absolute;
+        bottom: 0.5rem;
+        right: 0.5rem;
+      }
+      
+      /* add problem card */
+      .add-card {
+        background: transparent;
+        border: 3px dashed #e0006a;
+        border-radius: 16px;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        color: #e0006a;
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      
+      .add-card:hover {
+        background: rgba(224, 0, 106, 0.06);
+      }
+      
+      .add-icon {
+        width: 3rem;
+        height: 3rem;
+        background: #e0006a;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.8rem;
+        line-height: 1;
+      }
+      
+      /* ── MY PURPOSE ── */
+      .purpose-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.2rem;
+      }
+      
+      .score-box {
+        background: #fffacd;
+        border: 2.5px dashed #e8a000;
+        border-radius: 16px;
+        padding: 0.8rem 1.4rem;
+        text-align: center;
+      }
+      
+      .score-label {
+        font-size: 0.85rem;
+        color: #e8a000;
+        font-weight: 600;
+      }
+      
+      .score-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #e8a000;
+      }
+      
+      .purpose-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .purpose-item {
+        background: #fffde0;
+        border: 2px solid #1a1a1a;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      
+      .purpose-item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 1rem;
+        background: #f5f0e0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      
+      .purpose-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+      }
+      
+      .stars {
+        color: #f0a000;
+        font-size: 1.1rem;
+        letter-spacing: 2px;
+      }
+      
+      .purpose-from {
+        font-size: 0.85rem;
+        color: rgba(0, 0, 0, 0.45);
+      }
+      
+      .purpose-comment {
+        padding: 0.75rem 1rem;
+        font-size: 0.88rem;
+        color: #e8a000;
+        min-height: 60px;
+      }
+      
+      /* ── DIVIDER ── */
+      .divider {
+        height: 2px;
+        background: rgba(200, 0, 100, 0.2);
+        margin: 1rem 0 1.4rem;
+      }
+      
+      /* ── PHOTO UPLOAD MODAL ── */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .modal-overlay.open {
+        display: flex;
+      }
+      
+      .modal-box {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2rem;
+        width: min(500px, 90vw);
+        position: relative;
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        animation: popIn 0.25s ease both;
+      }
+      
+      @keyframes popIn {
+        from {
+          opacity: 0;
+          transform: scale(0.92);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      
+      .modal-close {
+        position: absolute;
+        top: 0.8rem;
+        right: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #555;
+        background: none;
+        border: none;
+        line-height: 1;
+      }
+      
+      .modal-close:hover {
+        color: #000;
+      }
+      
+      .modal-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 2px solid #1a1a1a;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      
+      .modal-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .modal-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      
+      .photo-drop-zone {
+        border: 2px dashed #ccc;
+        border-radius: 12px;
+        height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: #888;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        text-align: center;
+      }
+      
+      .photo-drop-zone:hover {
+        border-color: #d4007a;
+        background: rgba(212, 0, 122, 0.04);
+        color: #d4007a;
+      }
+      
+      #photo-file-input {
+        display: none;
+      }
+      
+      .modal-continue-btn {
+        align-self: center;
+        padding: 0.7rem 2rem;
+        border-radius: 999px;
+        border: 2px solid #e8c000;
+        background: #fffacd;
+        color: #a07000;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s;
+      }
+      
+      .modal-continue-btn:hover {
+        background: #e8c000;
+        color: #fff;
+        transform: translateY(-1px);
+      }
+      
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 220px;
+          min-width: 220px;
+        }
+        .tab-content {
+          padding-left: 3rem;
+        }
+        .section-title {
+          font-size: 2rem;
+        }
+      }
+      
+      @media (max-width: 560px) {
+        .main-layout {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          border-radius: 0 0 24px 24px;
+        }
+        .tabs-wrap {
+          flex-direction: row;
+          position: static;
+          margin-bottom: 1rem;
+        }
+        .tab-content {
+          padding-left: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <a class="navbar-brand" href="{% url 'home' %}">Viable Graph</a>
+      <ul class="nav-links">
+        <li>
+          <a href="{% url 'home' %}">Home</a>
+        </li>
+        <li>
+          <a href="{% url 'propose_solution' %}">Purpose</a>
+        </li>
+        <li>
+          <a href="{% url 'profile' %}" class="active">Profile</a>
+        </li>
+        <li>
+          <a href="{% url 'logout' %}">Log Out</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- MAIN -->
+    <div class="main-layout">
+      <!-- LEFT SIDEBAR -->
+      <aside class="sidebar">
+        <div class="bell-icon">🔔</div>
+
+        <!-- avatar — click to open modal -->
+        <div class="avatar-wrap" onclick="openModal()" title="Change profile photo">
+          {% if profile_photo %}
+            <img id="avatar-img" src="{{ profile_photo }}" alt="Profile" />
+          {% else %}
+            <div class="avatar-placeholder" id="avatar-placeholder">
+              <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="48" stroke="#1a1a1a" stroke-width="4" />
+                <circle cx="50" cy="36" r="16" stroke="#1a1a1a" stroke-width="4" />
+                <path d="M14 82c0-19.882 16.118-36 36-36s36 16.118 36 36" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" />
+              </svg>
+            </div>
+            <img id="avatar-img" src="" alt="Profile" style="display:none; width:100%; height:100%; object-fit:cover;" />
+          {% endif %}
+        </div>
+
+        <div style="width:100%">
+          <div class="info-label">Student Id</div>
+          <div class="info-box">{{ user.username }}</div>
+        </div>
+
+        <div style="width:100%">
+          <div class="info-label">Faculty</div>
+          <div class="info-box">{{ user.profile.faculty|default:'—' }}</div>
+        </div>
+      </aside>
+
+      <!-- RIGHT CONTENT -->
+      <main class="content-area">
+        <!-- Tabs -->
+        <div class="tabs-wrap">
+          <div class="tab-pill active" onclick="switchTab('problems', this)">
+            My<br />Problems
+          </div>
+          <div class="tab-pill" onclick="switchTab('purpose', this)">
+            My<br />Purpose
+          </div>
+        </div>
+
+        <!-- MY PROBLEMS -->
+        <div class="tab-content active" id="tab-problems">
+          <h2 class="section-title">My Problems</h2>
+          <div class="divider"></div>
+          <div class="problems-grid">
+            {% for problem in my_problems %}
+              <div class="problem-card">
+                <div class="problem-card-img">
+                  <!-- landscape placeholder SVG -->
+                  <svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="200" height="120" fill="#b8e8ff" />
+                    <ellipse cx="60" cy="30" rx="25" ry="18" fill="white" opacity="0.9" />
+                    <ellipse cx="90" cy="25" rx="30" ry="20" fill="white" opacity="0.85" />
+                    <ellipse cx="0" cy="120" rx="120" ry="55" fill="#4a9a4a" />
+                    <ellipse cx="200" cy="120" rx="100" ry="45" fill="#5aaa5a" />
+                    <ellipse cx="100" cy="120" rx="80" ry="35" fill="#6aba6a" />
+                  </svg>
+                </div>
+                <div class="problem-card-body">
+                  <div>
+                    <div class="problem-name">{{ problem.title }}</div>
+                    {% if problem.status == 'COMPLETED' %}
+                      <div class="status-completed">Completed</div>
+                    {% endif %}
+                  </div>
+                  <span style="font-size:0.8rem; color:#888; cursor:pointer;" title="{{ problem.description }}">ℹ️</span>
+                </div>
+                {% if problem.status == 'COMPLETED' %}
+                  <div class="check-badge">✓</div>
+                {% endif %}
+              </div>
+            {% empty %}
+              <p style="color:#a0005a; font-size:0.95rem; grid-column:1/-1;">ยังไม่มีปัญหาที่รายงาน</p>
+            {% endfor %}
+
+            <!-- Add problem card -->
+            <div class="add-card" onclick="window.location='{% url 'home' %}'">
+              <div class="add-icon">+</div>
+              <span>Add Problem</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- MY PURPOSE -->
+        <div class="tab-content" id="tab-purpose">
+          <div class="purpose-header">
+            <h2 class="section-title" style="text-align:left;">My Purpose</h2>
+            <div class="score-box">
+              <div class="score-label">My score</div>
+              <div class="score-value">{{ score|default:'0' }} ⏱</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="purpose-list">
+            {% for purpose in my_purposes %}
+              <div class="purpose-item">
+                <div class="purpose-item-header">
+                  <span class="purpose-title">{{ purpose.title }}</span>
+                  <span class="stars">
+                    {% for i in 12345 %}
+                      {% if forloop.counter <= purpose.rating %}
+                        ★
+                      {% else %}
+                        ☆
+                      {% endif %}
+                    {% endfor %}
+                  </span>
+                  <span class="purpose-from">from ℹ️</span>
+                </div>
+                <div class="purpose-comment">{{ purpose.comment|default:'' }}</div>
+              </div>
+            {% empty %}
+              <p style="color:#a07000; font-size:0.95rem;">ยังไม่มี Purpose</p>
+            {% endfor %}
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- PHOTO UPLOAD MODAL -->
+    <div class="modal-overlay" id="photo-modal">
+      <div class="modal-box">
+        <button class="modal-close" onclick="closeModal()">✕</button>
+
+        <div class="modal-avatar">
+          <img id="modal-preview" src="" alt="" style="display:none; width:100%; height:100%; object-fit:cover;" />
+          <svg id="modal-placeholder" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:80%;height:80%;">
+            <circle cx="50" cy="50" r="48" stroke="#ccc" stroke-width="4" />
+            <circle cx="50" cy="36" r="16" stroke="#ccc" stroke-width="4" />
+            <path d="M14 82c0-19.882 16.118-36 36-36s36 16.118 36 36" stroke="#ccc" stroke-width="4" stroke-linecap="round" />
+          </svg>
+        </div>
+
+        <div class="modal-right">
+          <div class="photo-drop-zone" onclick="document.getElementById('photo-file-input').click()">Select Photo</div>
+          <input type="file" id="photo-file-input" accept="image/*" onchange="previewPhoto(this)" />
+          <button class="modal-continue-btn" onclick="applyPhoto()">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Tab switching
+      function switchTab(tab, el) {
+        document.querySelectorAll('.tab-content').forEach((t) => t.classList.remove('active'))
+        document.querySelectorAll('.tab-pill').forEach((p) => p.classList.remove('active'))
+        document.getElementById('tab-' + tab).classList.add('active')
+        el.classList.add('active')
+      }
+      
+      // Modal
+      function openModal() {
+        document.getElementById('photo-modal').classList.add('open')
+      }
+      
+      function closeModal() {
+        document.getElementById('photo-modal').classList.remove('open')
+      }
+      
+      // Close modal on overlay click
+      document.getElementById('photo-modal').addEventListener('click', function (e) {
+        if (e.target === this) closeModal()
+      })
+      
+      // Preview selected photo in modal
+      function previewPhoto(input) {
+        if (!input.files || !input.files[0]) return
+        const reader = new FileReader()
+        reader.onload = function (e) {
+          const preview = document.getElementById('modal-preview')
+          const placeholder = document.getElementById('modal-placeholder')
+          preview.src = e.target.result
+          preview.style.display = 'block'
+          placeholder.style.display = 'none'
+        }
+        reader.readAsDataURL(input.files[0])
+      }
+      
+      // Apply photo to avatar and upload to server
+      function applyPhoto() {
+        const preview = document.getElementById('modal-preview')
+        if (!preview.src || preview.style.display === 'none') {
+          alert('กรุณาเลือกรูปก่อน')
+          return
+        }
+      
+        // Update avatar on page
+        const avatarImg = document.getElementById('avatar-img')
+        const avatarPlaceholder = document.getElementById('avatar-placeholder')
+        avatarImg.src = preview.src
+        avatarImg.style.display = 'block'
+        if (avatarPlaceholder) avatarPlaceholder.style.display = 'none'
+      
+        // Upload to server
+        const fileInput = document.getElementById('photo-file-input')
+        if (fileInput.files && fileInput.files[0]) {
+          const formData = new FormData()
+          formData.append('photo', fileInput.files[0])
+          formData.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+      
+          fetch('{% url "upload_photo" %}', {
+            method: 'POST',
+            body: formData
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (!data.success) console.error('Upload failed')
+            })
+            .catch((err) => console.error(err))
+        }
+      
+        closeModal()
+      }
+    </script>
+  </body>
+</html>

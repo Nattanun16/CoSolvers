@@ -4,3 +4,4 @@ django-admin-cli==0.1.1
 mysql-connector-python==8.1.0
 requests==2.31.0
 django-recaptcha
+Pillow
