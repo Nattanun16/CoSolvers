@@ -27,6 +27,7 @@ class Problem(models.Model):
         ("WATER", "การจัดการน้ำ"),
         ("APP", "ระบบแอปพลิเคชันและการสื่อสาร"),
         ("COMMUNITY", "การมีส่วนร่วมของชุมชน (ประชาคมจุฬาฯ)"),
+        ("OTHERS", "อื่นๆ"),
     ]
 
     STATUS_CHOICES = [
