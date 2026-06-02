@@ -5,7 +5,7 @@ from .models import Problem, Suggestion
 @admin.register(Problem)
 class ProblemAdmin(admin.ModelAdmin):
     # เลือกคอลัมน์ที่จะโชว์ในหน้าตารางแอดมิน
-    list_display = ("title", "category", "status", "created_at")
+    list_display = ("title", "category", "status", "reported_by", "created_at")
     # เพิ่มแถบตัวกรองข้อมูลด้านขวา
     list_filter = ("category", "status", "created_at")
     # เพิ่มช่องค้นหาข้อมูล

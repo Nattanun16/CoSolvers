@@ -12,6 +12,7 @@ from .models import Problem
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 
 
 # 1. หน้าแรกปกติ (เรนเดอร์หน้า home.html)
@@ -216,6 +217,12 @@ def define_problem(request):
         return redirect("home")
 
     return render(request, "define_problem.html")
+
+
+@login_required(login_url="login")
+def problem_detail(request, problem_id):
+    problem = get_object_or_404(Problem, id=problem_id, reported_by=request.user)
+    return render(request, "problem_detail.html", {"problem": problem})
 
 
 def about_us(request):
