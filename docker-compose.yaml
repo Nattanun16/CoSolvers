@@ -15,6 +15,7 @@ services:
       - DJANGO_SETTINGS_MODULE=viable_graph_project.settings
       - RECAPTCHA_SITE_KEY=${RECAPTCHA_SITE_KEY}
       - RECAPTCHA_SECRET_KEY=${RECAPTCHA_SECRET_KEY}
+      - GOOGLE_VISION_API_KEY=${GOOGLE_VISION_API_KEY}
 
   dbs:
     image: postgres:16
