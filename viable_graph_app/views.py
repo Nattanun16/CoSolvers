@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404
 import base64
 import json
+from django.db.models import Q
 
 
 # 1. หน้าแรกปกติ (เรนเดอร์หน้า home.html)
@@ -235,10 +236,6 @@ def propose_solutions(request):
     return render(request, "propose_solutions.html")
 
 
-def propose_solutions_2(request):
-    return render(request, "propose_solutions_2.html")
-
-
 def reset_pass(request):
     if request.method == "POST":
 
@@ -359,6 +356,7 @@ def login(request):
 
     return render(request, "login.html", context)
 
+
 @login_required(login_url="login")
 def check_image_safety(request):
     """
@@ -415,8 +413,6 @@ def check_image_safety(request):
 
     for field, label in CHECKS.items():
         if annotations.get(field, "UNKNOWN") in UNSAFE_LEVELS:
-            return JsonResponse(
-                {"safe": False, "reason": f"ภาพถูกปฏิเสธ: พบ{label}"}
-            )
+            return JsonResponse({"safe": False, "reason": f"ภาพถูกปฏิเสธ: พบ{label}"})
 
     return JsonResponse({"safe": True, "reason": ""})

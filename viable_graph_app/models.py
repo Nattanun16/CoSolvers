@@ -54,6 +54,12 @@ class Problem(models.Model):
     def __str__(self):
         return f"[{self.get_status_display()}] {self.title}"
 
+    @property
+    def tags_list(self):
+        if not self.tags:
+            return []
+        return [t.strip() for t in self.tags.split(",") if t.strip()]
+
 
 class Suggestion(models.Model):
     problem = models.ForeignKey(
