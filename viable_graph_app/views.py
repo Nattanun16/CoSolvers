@@ -74,7 +74,32 @@ def search(request):
 
 
 def propose_solution(request):
-    return render(request, "propose_solutions.html")
+    problems = Problem.objects.all().order_by("-created_at")
+
+    # ค้นหาตาม tag
+    tag = request.GET.get("tag", "").strip()
+    if tag:
+        problems = problems.filter(tags__icontains=tag)
+
+    # กรองตามประเภท
+    category = request.GET.get("category", "").strip()
+    if category:
+        problems = problems.filter(category=category)
+
+    return render(request, "propose_solutions.html", {"problems": problems})
+
+
+def favicon(request):
+    # Return a tiny transparent PNG favicon directly to avoid 404 requests for /favicon.ico
+    favicon_png = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAKbYBvgAAAAASUVORK5CYII="
+    )
+    return HttpResponse(favicon_png, content_type="image/png")
+
+
+def problem_detail_public(request, problem_id):
+    problem = get_object_or_404(Problem, id=problem_id)
+    return render(request, "problem_detail.html", {"problem": problem})
 
 
 def graph(request):
@@ -230,10 +255,6 @@ def problem_detail(request, problem_id):
 
 def about_us(request):
     return render(request, "about_us.html")
-
-
-def propose_solutions(request):
-    return render(request, "propose_solutions.html")
 
 
 def reset_pass(request):
