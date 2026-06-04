@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>แก้ไขปัญหา – Viable Graph</title>
+    {% load static %}
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: 'Outfit', sans-serif; background: #ffb3d9; min-height: 100vh; color: #1a1a1a; }
+
+      .navbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2.5rem; background: transparent; }
+      .navbar-brand { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: #ffffff; letter-spacing: 0.06em; text-decoration: none; }
+      .nav-links { display: flex; gap: 2rem; list-style: none; }
+      .nav-links a { color: #1a1a1a; text-decoration: none; font-size: 1rem; font-weight: 500; }
+      .nav-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
+
+      .page-content { max-width: 700px; margin: 0 auto; padding: 2rem; }
+      .back-btn { display: inline-flex; align-items: center; gap: 0.5rem; color: #c0187a; font-weight: 600; font-size: 0.95rem; text-decoration: none; margin-bottom: 1.5rem; }
+      .back-btn:hover { opacity: 0.7; }
+
+      .form-card { background: rgba(255,255,255,0.85); border-radius: 24px; padding: 2.5rem; box-shadow: 0 8px 40px rgba(180,0,100,0.1); }
+      .form-title { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; color: #d4007a; margin-bottom: 1.8rem; letter-spacing: 0.04em; }
+
+      .form-group { margin-bottom: 1.2rem; }
+      .form-label { display: block; font-weight: 600; color: #c0187a; margin-bottom: 0.4rem; font-size: 0.95rem; }
+      .form-control {
+        width: 100%; padding: 0.7rem 1rem; border-radius: 10px;
+        border: 2px solid #f0a0c8; font-family: 'Outfit', sans-serif;
+        font-size: 0.95rem; background: #fff; color: #1a1a1a;
+        transition: border-color 0.2s;
+      }
+      .form-control:focus { outline: none; border-color: #d4007a; }
+      textarea.form-control { resize: vertical; min-height: 110px; }
+
+      .current-photo { margin-top: 0.5rem; }
+      .current-photo img { max-height: 140px; border-radius: 10px; border: 2px solid #f0a0c8; }
+      .current-photo p { font-size: 0.85rem; color: #888; margin-bottom: 0.4rem; }
+
+      .btn-row { display: flex; gap: 1rem; margin-top: 1.8rem; flex-wrap: wrap; }
+      .btn-save {
+        padding: 0.7rem 2rem; border-radius: 999px;
+        background: #d4007a; color: #fff; border: none;
+        font-family: 'Outfit', sans-serif; font-weight: 700;
+        font-size: 1rem; cursor: pointer; transition: background 0.2s;
+      }
+      .btn-save:hover { background: #a8005f; }
+      .btn-save:disabled { background: #ccc; cursor: not-allowed; }
+      .btn-cancel {
+        padding: 0.7rem 2rem; border-radius: 999px;
+        background: #fff; color: #c0187a;
+        border: 2px solid #c0187a;
+        font-family: 'Outfit', sans-serif; font-weight: 600;
+        font-size: 1rem; cursor: pointer; text-decoration: none;
+        display: inline-flex; align-items: center;
+      }
+      .btn-cancel:hover { background: #fff0f7; }
+
+      .messages { margin-bottom: 1rem; }
+      .msg-error { background: #f8d7da; color: #842029; border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.92rem; margin-bottom: 0.4rem; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a class="navbar-brand" href="{% url 'home' %}">Viable Graph</a>
+      <ul class="nav-links">
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'propose_solution' %}">Purpose</a></li>
+        <li><a href="{% url 'profile' %}">Profile</a></li>
+        <li><a href="{% url 'logout' %}">Log Out</a></li>
+      </ul>
+    </nav>
+
+    <div class="page-content">
+      <a class="back-btn" href="{% url 'problem_detail' problem.id %}">&#8592; กลับไปหน้าปัญหา</a>
+
+      <div class="form-card">
+        <div class="form-title">✏️ แก้ไขปัญหา</div>
+
+        {% if messages %}
+          <div class="messages">
+            {% for message in messages %}
+              <div class="msg-error">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data" id="edit-form">
+          {% csrf_token %}
+
+          <div class="form-group">
+            <label class="form-label">ชื่อปัญหา *</label>
+            <input class="form-control" type="text" name="title" value="{{ problem.title }}" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ประเภทปัญหา</label>
+            <select class="form-control" name="category">
+              {% for value, label in problem.CATEGORY_CHOICES %}
+                <option value="{{ value }}" {% if problem.category == value %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">รายละเอียด</label>
+            <textarea class="form-control" name="description">{{ problem.description }}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">สถานที่</label>
+            <input class="form-control" type="text" name="location" value="{{ problem.location }}" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tags (คั่นด้วยจุลภาค)</label>
+            <input class="form-control" type="text" name="tags" value="{{ problem.tags }}" placeholder="เช่น ฝุ่น, มลพิษ, อากาศ" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">วันที่เกิดเหตุ</label>
+            <input class="form-control" type="date" name="incident_date"
+                   value="{{ problem.incident_date|date:'Y-m-d' }}" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">รูปภาพ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)</label>
+            {% if problem.photo %}
+              <div class="current-photo" id="current-photo-wrap">
+                <p>รูปปัจจุบัน:</p>
+                <img src="{{ problem.photo.url }}" alt="current photo" />
+              </div>
+            {% endif %}
+            <input class="form-control" type="file" name="photo" accept="image/*"
+                   id="photo-input" style="margin-top:0.5rem;"
+                   onchange="checkPhotoSafety(this)" />
+            <div id="photo-checking" style="display:none; color:#856404; font-size:0.88rem; margin-top:0.4rem;">
+              ⏳ กำลังตรวจสอบภาพ...
+            </div>
+            <div id="photo-preview-wrap" style="margin-top:0.6rem;"></div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn-save" type="submit" id="save-btn">💾 บันทึกการแก้ไข</button>
+            <a class="btn-cancel" href="{% url 'problem_detail' problem.id %}">ยกเลิก</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      async function checkPhotoSafety(input) {
+        if (!input.files || !input.files[0]) return;
+
+        const checking = document.getElementById('photo-checking');
+        const previewWrap = document.getElementById('photo-preview-wrap');
+        const currentPhotoWrap = document.getElementById('current-photo-wrap');
+        const saveBtn = document.getElementById('save-btn');
+
+        checking.style.display = 'block';
+        previewWrap.innerHTML = '';
+        saveBtn.disabled = true;
+
+        const csrfToken = document.cookie
+          .split('; ')
+          .find(row => row.startsWith('csrftoken='))
+          ?.split('=')[1] || '';
+
+        const formData = new FormData();
+        formData.append('photo', input.files[0]);
+
+        try {
+          const res = await fetch('/api/check-image-safety/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+            body: formData,
+          });
+          const data = await res.json();
+
+          if (!data.safe) {
+            alert(`❌ ไม่สามารถอัปโหลดภาพได้\n${data.reason}\nกรุณาเลือกภาพอื่น`);
+            input.value = '';
+            previewWrap.innerHTML = '';
+          } else {
+            // ซ่อนรูปเดิม แสดง preview รูปใหม่
+            if (currentPhotoWrap) currentPhotoWrap.style.display = 'none';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              previewWrap.innerHTML = `
+                <p style="font-size:0.85rem; color:#888; margin-bottom:0.4rem;">รูปใหม่:</p>
+                <img src="${e.target.result}" style="max-height:140px; border-radius:10px; border:2px solid #f0a0c8;" />
+              `;
+            };
+            reader.readAsDataURL(input.files[0]);
+          }
+        } catch (e) {
+          // ถ้า Vision API ล้มเหลวให้ผ่านไปก่อน ไม่บล็อก user
+        }
+
+        checking.style.display = 'none';
+        saveBtn.disabled = false;
+      }
+    </script>
+  </body>
+</html>

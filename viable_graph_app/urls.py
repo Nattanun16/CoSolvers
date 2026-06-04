@@ -28,4 +28,6 @@ urlpatterns = [
         views.problem_detail_public,
         name="problem_detail_public",
     ),
+    path("problem/<int:problem_id>/edit/", views.edit_problem, name="edit_problem"),
+    path("problem/<int:problem_id>/delete/", views.delete_problem, name="delete_problem"),
 ]

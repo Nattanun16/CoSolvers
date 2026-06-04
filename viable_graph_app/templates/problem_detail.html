@@ -242,7 +242,46 @@
     </nav>
 
     <div class="page-content">
-      <a class="back-btn" href="{% url 'propose_solutions' %}">&#8592; กลับไปนำเสนอปัญหา</a>
+  {% if messages %}
+    <div style="margin-bottom:1rem;">
+      {% for message in messages %}
+        <div style="background:#d1e7dd; color:#0a3622; border-radius:10px; padding:0.7rem 1rem; font-size:0.92rem; margin-bottom:0.4rem;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.8rem;">
+  <a class="back-btn" style="margin-bottom:0;" href="{% url 'propose_solutions' %}">&#8592; กลับไปนำเสนอปัญหา</a>
+
+  {% if user.is_authenticated and problem.reported_by == user %}
+    <div style="display:flex; gap:0.75rem;">
+      <a href="{% url 'edit_problem' problem.id %}"
+         style="display:inline-flex; align-items:center; gap:0.4rem;
+                padding:0.55rem 1.2rem; border-radius:999px;
+                background:#fff3cd; color:#856404;
+                border:2px solid #e8c000; font-weight:600;
+                font-size:0.9rem; text-decoration:none;
+                transition:background 0.2s;">
+        ✏️ แก้ไข
+      </a>
+
+      <form method="POST" action="{% url 'delete_problem' problem.id %}"
+            onsubmit="return confirm('ยืนยันการลบปัญหานี้? ไม่สามารถกู้คืนได้')">
+        {% csrf_token %}
+        <button type="submit"
+                style="display:inline-flex; align-items:center; gap:0.4rem;
+                       padding:0.55rem 1.2rem; border-radius:999px;
+                       background:#f8d7da; color:#842029;
+                       border:2px solid #f1aeb5; font-weight:600;
+                       font-size:0.9rem; cursor:pointer;
+                       transition:background 0.2s;">
+          🗑️ ลบ
+        </button>
+      </form>
+    </div>
+  {% endif %}
+</div>
 
       <div class="detail-card">
         <!-- Image -->

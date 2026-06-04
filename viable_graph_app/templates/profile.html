@@ -782,7 +782,13 @@
           })
             .then((res) => res.json())
             .then((data) => {
-              if (!data.success) console.error('Upload failed')
+              if (!data.success) {
+                alert(`❌ ไม่สามารถอัปโหลดรูปโปรไฟล์ได้\n${data.reason || 'กรุณาเลือกรูปอื่น'}`);
+                // คืน avatar กลับเป็นรูปเดิม
+                avatarImg.src = '';
+                avatarImg.style.display = 'none';
+                if (avatarPlaceholder) avatarPlaceholder.style.display = 'flex';
+              }
             })
             .catch((err) => console.error(err))
         }
