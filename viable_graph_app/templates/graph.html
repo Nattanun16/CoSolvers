@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>กราฟสถิติปัญหา – Viable Graph</title>
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: #0a0a0f;
+      color: white;
+      min-height: 100vh;
+    }
+    .navbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2.5rem;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .navbar-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      color: #fff;
+      text-decoration: none;
+      letter-spacing: 0.06em;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.95rem; font-weight: 500; }
+    .nav-links a:hover { color: #fff; }
+
+    .page-wrap {
+      max-width: 900px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+    .subtitle {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    .chart-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .chart-card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: rgba(255,255,255,0.85);
+    }
+    .loading {
+      text-align: center;
+      color: rgba(255,255,255,0.4);
+      padding: 3rem 0;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a class="navbar-brand" href="{% url 'home' %}">Viable Graph</a>
+    <ul class="nav-links">
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'propose_solution' %}">ปัญหาทั้งหมด</a></li>
+      <li><a href="{% url 'graph' %}">กราฟ</a></li>
+      {% if user.is_authenticated %}
+        <li><a href="{% url 'profile' %}">โปรไฟล์</a></li>
+        <li><a href="{% url 'logout' %}">ออกจากระบบ</a></li>
+      {% else %}
+        <li><a href="{% url 'login' %}">เข้าสู่ระบบ</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <div class="page-wrap">
+    <h1>สถิติปัญหา</h1>
+    <p class="subtitle">ภาพรวมปัญหาที่รายงานเข้าระบบ แยกตามหมวดหมู่</p>
+
+    <div class="chart-card">
+      <h2>📊 จำนวนปัญหาแยกตามหมวดหมู่</h2>
+      <canvas id="barChart" height="120"></canvas>
+      <div class="loading" id="bar-loading">กำลังโหลด...</div>
+    </div>
+
+    <div class="chart-card">
+      <h2>🥧 สัดส่วนปัญหาแยกประเภท</h2>
+      <canvas id="pieChart" height="120"></canvas>
+      <div class="loading" id="pie-loading">กำลังโหลด...</div>
+    </div>
+  </div>
+
+  <script>
+    async function loadCharts() {
+      try {
+        const res = await fetch("{% url 'chart_data' %}");
+        const data = await res.json();
+
+        document.getElementById('bar-loading').style.display = 'none';
+        document.getElementById('pie-loading').style.display = 'none';
+
+        const colors = [
+          '#ff6b9d', '#c77dff', '#4cc9f0', '#f4d03f',
+          '#56c596', '#ff9f43',
+        ];
+
+        new Chart(document.getElementById('barChart'), {
+          type: 'bar',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'จำนวนปัญหา',
+              data: data.data,
+              backgroundColor: colors,
+              borderRadius: 8,
+              borderSkipped: false,
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              y: { ticks: { color: 'rgba(255,255,255,0.7)', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            }
+          }
+        });
+
+        new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              data: data.data,
+              backgroundColor: colors,
+              borderWidth: 2,
+              borderColor: '#0a0a0f',
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { labels: { color: 'rgba(255,255,255,0.8)', padding: 16, font: { size: 13 } } }
+            }
+          }
+        });
+      } catch (e) {
+        document.getElementById('bar-loading').textContent = 'โหลดข้อมูลไม่สำเร็จ';
+        document.getElementById('pie-loading').textContent = 'โหลดข้อมูลไม่สำเร็จ';
+      }
+    }
+    loadCharts();
+  </script>
+</body>
+</html>

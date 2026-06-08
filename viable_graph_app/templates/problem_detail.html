@@ -536,7 +536,7 @@
     </div>
   {% endif %}
       <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:0.8rem;">
-  <a class="back-btn" style="margin-bottom:0;" href="{% url 'propose_solutions' %}">&#8592; กลับไปนำเสนอปัญหา</a>
+  <a class="back-btn" style="margin-bottom:0;" href="{% url 'propose_solution' %}">&#8592; กลับไปนำเสนอปัญหา</a>
 
   {% if user.is_authenticated and problem.reported_by == user %}
     <div style="display:flex; gap:0.75rem;">

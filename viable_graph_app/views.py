@@ -1,3 +1,4 @@
+import time
 import requests
 import random
 import re
@@ -5,30 +6,36 @@ from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.models import User
 from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse  # ✅ แก้: เพิ่ม HttpResponse
-from django.db.models import Count
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse
+from django.db.models import Count, Q
 from .models import Problem, Comment
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
 import base64
 import json
-from django.db.models import Q
-from django.http import JsonResponse, HttpResponse
 
 
 # 1. หน้าแรกปกติ (เรนเดอร์หน้า home.html)
 def home_view(request):
+    # แก้บัค #2: home_view POST ต้องล็อกอินก่อนถึงสร้าง Problem ได้
+    # และต้องผูก reported_by กับ user ที่ล็อกอิน
     if request.method == "POST":
+        if not request.user.is_authenticated:
+            messages.error(request, "กรุณาล็อกอินก่อนส่งรายงานปัญหา")
+            return redirect("login")
+
         title = request.POST.get("title", "").strip()
         category = request.POST.get("category", "ROADS")
         description = request.POST.get("description", "").strip()
 
         if title and description:
             Problem.objects.create(
-                title=title, category=category, description=description
+                title=title,
+                category=category,
+                description=description,
+                reported_by=request.user,  # แก้: เพิ่ม reported_by
             )
             messages.success(request, "ส่งรายงานปัญหาเรียบร้อยแล้ว")
             return redirect("home")
@@ -51,14 +58,11 @@ def home_view(request):
 
 # 2. API จ่ายข้อมูลดิบไปพล็อตกราฟ (ส่งข้อมูลเป็น JSON)
 def problem_chart_data(request):
-    # ไปนับจำนวนปัญหาแยกตามหมวดหมู่ในฐานข้อมูล
     data_query = Problem.objects.values("category").annotate(total=Count("id"))
 
-    # จัดโครงสร้างข้อมูลให้อ่านง่ายสำหรับ Frontend
     labels = []
     values = []
 
-    # แปลงชื่อย่อฐานข้อมูลเป็นภาษาไทยก่อนส่งออกไป
     category_map = dict(Problem.CATEGORY_CHOICES)
 
     for item in data_query:
@@ -71,18 +75,17 @@ def problem_chart_data(request):
 def search(request):
     q = request.GET.get("q", "")
     results = Problem.objects.filter(title__icontains=q)
-    return render(request, "search.html", {"results": results, "query": q})
+    # แก้บัค #9: ใช้ propose_solutions.html แทน search.html ที่ไม่มี
+    return render(request, "propose_solutions.html", {"problems": results, "query": q})
 
 
 def propose_solution(request):
     problems = Problem.objects.all().order_by("-created_at")
 
-    # ค้นหาตาม tag
     tag = request.GET.get("tag", "").strip()
     if tag:
         problems = problems.filter(tags__icontains=tag)
 
-    # กรองตามประเภท
     category = request.GET.get("category", "").strip()
     if category:
         problems = problems.filter(category=category)
@@ -91,7 +94,6 @@ def propose_solution(request):
 
 
 def favicon(request):
-    # Return a tiny transparent PNG favicon directly to avoid 404 requests for /favicon.ico
     favicon_png = base64.b64decode(
         "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAKbYBvgAAAAASUVORK5CYII="
     )
@@ -124,7 +126,6 @@ def sign_up(request):
     context = {"RECAPTCHA_SITE_KEY": settings.RECAPTCHA_SITE_KEY}
 
     if request.method == "POST":
-        # Validate reCAPTCHA server-side
         if not settings.RECAPTCHA_SITE_KEY or settings.RECAPTCHA_SITE_KEY.startswith(
             "YOUR_"
         ):
@@ -164,7 +165,6 @@ def sign_up(request):
             messages.error(request, "กรุณากรอกข้อมูลทุกช่องให้ครบถ้วน")
             return render(request, "sign_up.html", context)
 
-        # Server-side password complexity check
         pw = password or ""
         if (
             len(pw) < 8
@@ -205,7 +205,6 @@ def sign_up(request):
 def profile(request):
     my_problems = Problem.objects.filter(reported_by=request.user)
 
-    # ✅ แก้: ส่ง profile_photo url ไปใน context เพื่อให้ template แสดงรูปได้หลัง reload
     profile_photo = None
     if request.user.profile.photo:
         profile_photo = request.user.profile.photo.url
@@ -222,17 +221,15 @@ def profile(request):
     )
 
 
-# ✅ แก้: upload_photo ตรวจสอบความปลอดภัยของรูปโปรไฟล์ก่อนบันทึก
 @login_required(login_url="login")
 def upload_photo(request):
     if request.method == "POST" and request.FILES.get("photo"):
         photo = request.FILES["photo"]
 
-        # ตรวจสอบความปลอดภัยของรูปด้วย Google Vision API
         api_key = getattr(settings, "GOOGLE_VISION_API_KEY", "")
         if api_key and not api_key.startswith("YOUR_"):
             image_data = base64.b64encode(photo.read()).decode("utf-8")
-            photo.seek(0)  # reset file pointer หลังอ่าน
+            photo.seek(0)
 
             vision_url = f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
             payload = {
@@ -258,7 +255,7 @@ def upload_photo(request):
                     if annotations.get(field, "UNKNOWN") in UNSAFE_LEVELS:
                         return JsonResponse({"success": False, "reason": f"ภาพถูกปฏิเสธ: พบ{label}"})
             except Exception:
-                pass  # ถ้า Vision API ล้มเหลวให้ผ่านไปก่อน ไม่บล็อก user
+                pass
 
         request.user.profile.photo = photo
         request.user.profile.save()
@@ -297,10 +294,13 @@ def define_problem(request):
     return render(request, "define_problem.html")
 
 
+# แก้บัค #1: รวม problem_detail ให้ใช้ view เดียวกับ problem_detail_public
+# เพื่อไม่ให้ redirect loop และ 404 สำหรับคนที่ไม่ใช่เจ้าของ
 @login_required(login_url="login")
 def problem_detail(request, problem_id):
-    problem = get_object_or_404(Problem, id=problem_id, reported_by=request.user)
-    return render(request, "problem_detail.html", {"problem": problem})
+    problem = get_object_or_404(Problem, id=problem_id)
+    comments = problem.comments.filter(parent=None).order_by("created_at")
+    return render(request, "problem_detail.html", {"problem": problem, "comments": comments})
 
 
 @login_required(login_url="login")
@@ -348,8 +348,13 @@ def delete_comment(request, comment_id):
         return redirect("problem_detail_public", problem_id=problem_id)
 
 
+# แก้บัค #6: about_us ใช้ home.html แทนเพราะไม่มี about_us.html
+# ถ้าอยากทำหน้า About Us จริงๆ ค่อยสร้าง template เพิ่ม
 def about_us(request):
-    return render(request, "about_us.html")
+    return redirect("home")
+
+
+OTP_EXPIRY_SECONDS = 300  # 5 นาที
 
 
 def reset_pass(request):
@@ -359,11 +364,12 @@ def reset_pass(request):
         if request.POST.get("resend") == "1":
             otp = str(random.randint(100000, 999999))
             request.session["reset_otp"] = otp
+            request.session["reset_otp_time"] = time.time()  # แก้บัค #3: บันทึกเวลา
             email = request.session.get("reset_email", "")
             if email:
                 send_mail(
                     subject="OTP รีเซ็ตรหัสผ่าน",
-                    message=f"รหัส OTP ของคุณคือ: {otp}",
+                    message=f"รหัส OTP ของคุณคือ: {otp}\nหมดอายุใน 5 นาที",
                     from_email=settings.EMAIL_HOST_USER,
                     recipient_list=[email],
                 )
@@ -376,6 +382,7 @@ def reset_pass(request):
                 user = User.objects.get(username=student_id)
                 otp = str(random.randint(100000, 999999))
                 request.session["reset_otp"] = otp
+                request.session["reset_otp_time"] = time.time()  # แก้บัค #3: บันทึกเวลา
                 request.session["reset_user_id"] = user.id
                 request.session["reset_email"] = user.email
                 send_mail(
@@ -384,7 +391,7 @@ def reset_pass(request):
                     from_email=settings.EMAIL_HOST_USER,
                     recipient_list=[user.email],
                 )
-                messages.success(request, f"ส่ง OTP ไปที่อีเมลแล้ว")
+                messages.success(request, "ส่ง OTP ไปที่อีเมลแล้ว")
             except User.DoesNotExist:
                 messages.error(request, "ไม่พบ Student ID นี้ในระบบ")
             return render(request, "reset_pass.html")
@@ -393,10 +400,16 @@ def reset_pass(request):
         otp_input = request.POST.get("otp", "").strip()
         new_password = request.POST.get("new_password", "")
         session_otp = request.session.get("reset_otp", "")
+        otp_time = request.session.get("reset_otp_time", 0)
         user_id = request.session.get("reset_user_id")
 
         if not otp_input or not new_password:
             messages.error(request, "กรุณากรอก OTP และรหัสผ่านใหม่")
+            return render(request, "reset_pass.html")
+
+        # แก้บัค #3: ตรวจสอบว่า OTP หมดอายุหรือยัง
+        if time.time() - otp_time > OTP_EXPIRY_SECONDS:
+            messages.error(request, "OTP หมดอายุแล้ว กรุณาขอ OTP ใหม่")
             return render(request, "reset_pass.html")
 
         if otp_input != session_otp:
@@ -407,9 +420,9 @@ def reset_pass(request):
             user = User.objects.get(id=user_id)
             user.set_password(new_password)
             user.save()
-            # ล้าง session
-            del request.session["reset_otp"]
-            del request.session["reset_user_id"]
+            # แก้บัค #4: ล้าง session ให้ครบทุก key
+            for key in ["reset_otp", "reset_user_id", "reset_email", "reset_otp_time"]:
+                request.session.pop(key, None)
             messages.success(request, "เปลี่ยนรหัสผ่านสำเร็จ กรุณาล็อกอินใหม่")
             return redirect("login")
         except User.DoesNotExist:
@@ -428,7 +441,6 @@ def login(request):
         return render(request, "login.html", context)
 
     if request.method == "POST":
-        # 1. ตรวจ reCAPTCHA ก่อน
         token = request.POST.get("g-recaptcha-response", "")
         if not token:
             messages.error(request, "กรุณายืนยัน reCAPTCHA ก่อน")
@@ -453,7 +465,6 @@ def login(request):
             messages.error(request, "reCAPTCHA ไม่ผ่าน กรุณาลองใหม่")
             return render(request, "login.html", context)
 
-        # 2. ✅ ตรวจ student_id / password จริง ๆ
         student_id = request.POST.get("student_id", "").strip()
         password = request.POST.get("password", "")
 
@@ -475,10 +486,6 @@ def login(request):
 
 @login_required(login_url="login")
 def check_image_safety(request):
-    """
-    รับไฟล์ภาพ ส่งไป Google Vision API เพื่อตรวจสอบเนื้อหาไม่เหมาะสม
-    คืนค่า JSON: { "safe": true/false, "reason": "..." }
-    """
     if request.method != "POST":
         return JsonResponse({"safe": False, "reason": "Method not allowed"}, status=405)
 
@@ -486,12 +493,10 @@ def check_image_safety(request):
     if not photo:
         return JsonResponse({"safe": False, "reason": "ไม่พบไฟล์ภาพ"}, status=400)
 
-    # อ่านไฟล์และแปลงเป็น base64
     image_data = base64.b64encode(photo.read()).decode("utf-8")
 
     api_key = settings.GOOGLE_VISION_API_KEY
     if not api_key or api_key.startswith("YOUR_"):
-        # ถ้ายังไม่ตั้งค่า key ให้ผ่านไปก่อน (เพื่อไม่บล็อก dev)
         return JsonResponse({"safe": True, "reason": ""})
 
     url = f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
@@ -507,16 +512,11 @@ def check_image_safety(request):
     try:
         response = requests.post(url, json=payload, timeout=10)
         result = response.json()
-        print("Vision API status:", response.status_code)
-        print("Vision API result:", result)
     except requests.RequestException as e:
-        print("Vision API ERROR:", e)
         return JsonResponse({"safe": True, "reason": ""})
 
-    # ดึงผล SafeSearch
     annotations = result.get("responses", [{}])[0].get("safeSearchAnnotation", {})
 
-    # ระดับที่ถือว่าไม่ปลอดภัย: LIKELY หรือ VERY_LIKELY
     UNSAFE_LEVELS = {"LIKELY", "VERY_LIKELY"}
     CHECKS = {
         "adult": "เนื้อหาลามกอนาจาร",
@@ -534,7 +534,6 @@ def check_image_safety(request):
 
 @login_required(login_url="login")
 def edit_problem(request, problem_id):
-    # ดึงปัญหาที่เป็นของ user คนนี้เท่านั้น — ถ้าไม่ใช่เจ้าของจะได้ 404
     problem = get_object_or_404(Problem, id=problem_id, reported_by=request.user)
 
     if request.method == "POST":
@@ -560,18 +559,13 @@ def edit_problem(request, problem_id):
             problem.photo = photo
         problem.save()
 
-        # แก้: ไม่ใช้ messages.success ที่นี่อีกต่อไป
-        # เพราะ problem_detail.html ไม่มีพื้นที่แสดง message
-        # ทำให้ message ค้างและโผล่ที่หน้า edit แทน
-        # แก้โดยส่ง flag ผ่าน query string แทน
-        return redirect(f"/problem/{problem.id}/?updated=1")
+        return redirect(f"/problem/public/{problem.id}/?updated=1")
 
     return render(request, "edit_problem.html", {"problem": problem})
 
 
 @login_required(login_url="login")
 def delete_problem(request, problem_id):
-    # ดึงปัญหาที่เป็นของ user คนนี้เท่านั้น
     problem = get_object_or_404(Problem, id=problem_id, reported_by=request.user)
 
     if request.method == "POST":
@@ -579,5 +573,4 @@ def delete_problem(request, problem_id):
         messages.success(request, "ลบปัญหาเรียบร้อยแล้ว")
         return redirect("profile")
 
-    # ถ้า GET ให้ redirect กลับไปหน้า detail (ป้องกัน direct URL access)
-    return redirect("problem_detail", problem_id=problem_id)
+    return redirect("problem_detail_public", problem_id=problem_id)
