@@ -13,6 +13,7 @@ from .models import Problem, Comment, UserProfile
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import login_required
+from .vision import check_image_safety as vision_check
 import base64
 import json
 
@@ -225,51 +226,19 @@ def profile(request):
 
 @login_required(login_url="login")
 def upload_photo(request):
+    """อัปโหลดรูปโปรไฟล์ — ตรวจสอบด้วย Google Vision ก่อนบันทึก"""
     if request.method == "POST" and request.FILES.get("photo"):
         photo = request.FILES["photo"]
 
-        api_key = getattr(settings, "GOOGLE_VISION_API_KEY", "")
-        if api_key and not api_key.startswith("YOUR_"):
-            image_data = base64.b64encode(photo.read()).decode("utf-8")
-            photo.seek(0)
-
-            vision_url = (
-                f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
-            )
-            payload = {
-                "requests": [
-                    {
-                        "image": {"content": image_data},
-                        "features": [{"type": "SAFE_SEARCH_DETECTION"}],
-                    }
-                ]
-            }
-            try:
-                vision_response = requests.post(vision_url, json=payload, timeout=10)
-                result = vision_response.json()
-                annotations = result.get("responses", [{}])[0].get(
-                    "safeSearchAnnotation", {}
-                )
-                UNSAFE_LEVELS = {"LIKELY", "VERY_LIKELY"}
-                CHECKS = {
-                    "adult": "เนื้อหาลามกอนาจาร",
-                    "violence": "เนื้อหาที่มีความรุนแรง",
-                    "racy": "เนื้อหาไม่เหมาะสม",
-                    "medical": "เนื้อหาทางการแพทย์ที่รุนแรง",
-                }
-                for field, label in CHECKS.items():
-                    if annotations.get(field, "UNKNOWN") in UNSAFE_LEVELS:
-                        return JsonResponse(
-                            {"success": False, "reason": f"ภาพถูกปฏิเสธ: พบ{label}"}
-                        )
-            except Exception:
-                pass
+        result = vision_check(photo)
+        if not result["safe"]:
+            return JsonResponse({"success": False, "reason": result["reason"]})
 
         profile, _ = UserProfile.objects.get_or_create(user=request.user)
         profile.photo = photo
         profile.save()
         return JsonResponse({"success": True})
-    return JsonResponse({"success": False})
+    return JsonResponse({"success": False, "reason": "ไม่พบไฟล์ภาพ"})
 
 
 @login_required(login_url="login")
@@ -286,6 +255,13 @@ def define_problem(request):
         if not title:
             messages.error(request, "กรุณากรอกชื่อปัญหา")
             return render(request, "define_problem.html")
+
+        # ตรวจสอบรูปภาพด้วย Google Vision API (server-side)
+        if photo:
+            vision_result = vision_check(photo)
+            if not vision_result["safe"]:
+                messages.error(request, f"❌ {vision_result['reason']} กรุณาเลือกรูปอื่น")
+                return render(request, "define_problem.html")
 
         Problem.objects.create(
             title=title,
@@ -503,6 +479,7 @@ def login(request):
 
 @login_required(login_url="login")
 def check_image_safety(request):
+    """API endpoint ตรวจสอบความปลอดภัยของรูปก่อนแสดง preview (เรียกจาก JS)"""
     if request.method != "POST":
         return JsonResponse({"safe": False, "reason": "Method not allowed"}, status=405)
 
@@ -510,43 +487,8 @@ def check_image_safety(request):
     if not photo:
         return JsonResponse({"safe": False, "reason": "ไม่พบไฟล์ภาพ"}, status=400)
 
-    image_data = base64.b64encode(photo.read()).decode("utf-8")
-
-    api_key = settings.GOOGLE_VISION_API_KEY
-    if not api_key or api_key.startswith("YOUR_"):
-        return JsonResponse({"safe": True, "reason": ""})
-
-    url = f"https://vision.googleapis.com/v1/images:annotate?key={api_key}"
-    payload = {
-        "requests": [
-            {
-                "image": {"content": image_data},
-                "features": [{"type": "SAFE_SEARCH_DETECTION"}],
-            }
-        ]
-    }
-
-    try:
-        response = requests.post(url, json=payload, timeout=10)
-        result = response.json()
-    except requests.RequestException as e:
-        return JsonResponse({"safe": True, "reason": ""})
-
-    annotations = result.get("responses", [{}])[0].get("safeSearchAnnotation", {})
-
-    UNSAFE_LEVELS = {"LIKELY", "VERY_LIKELY"}
-    CHECKS = {
-        "adult": "เนื้อหาลามกอนาจาร",
-        "violence": "เนื้อหาที่มีความรุนแรง",
-        "racy": "เนื้อหาไม่เหมาะสม",
-        "medical": "เนื้อหาทางการแพทย์ที่รุนแรง",
-    }
-
-    for field, label in CHECKS.items():
-        if annotations.get(field, "UNKNOWN") in UNSAFE_LEVELS:
-            return JsonResponse({"safe": False, "reason": f"ภาพถูกปฏิเสธ: พบ{label}"})
-
-    return JsonResponse({"safe": True, "reason": ""})
+    result = vision_check(photo)
+    return JsonResponse({"safe": result["safe"], "reason": result["reason"]})
 
 
 @login_required(login_url="login")
@@ -565,6 +507,13 @@ def edit_problem(request, problem_id):
         if not title:
             messages.error(request, "กรุณากรอกชื่อปัญหา")
             return render(request, "edit_problem.html", {"problem": problem})
+
+        # ตรวจสอบรูปภาพใหม่ด้วย Google Vision API (server-side)
+        if photo:
+            vision_result = vision_check(photo)
+            if not vision_result["safe"]:
+                messages.error(request, f"❌ {vision_result['reason']} กรุณาเลือกรูปอื่น")
+                return render(request, "edit_problem.html", {"problem": problem})
 
         problem.title = title
         problem.category = category

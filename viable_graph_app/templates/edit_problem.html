@@ -59,6 +59,8 @@
 
       .messages { margin-bottom: 1rem; }
       .msg-error { background: #f8d7da; color: #842029; border-radius: 10px; padding: 0.7rem 1rem; font-size: 0.92rem; margin-bottom: 0.4rem; }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
     </style>
   </head>
   <body>
@@ -135,8 +137,9 @@
             <input class="form-control" type="file" name="photo" accept="image/*"
                    id="photo-input" style="margin-top:0.5rem;"
                    onchange="checkPhotoSafety(this)" />
-            <div id="photo-checking" style="display:none; color:#856404; font-size:0.88rem; margin-top:0.4rem;">
-              ⏳ กำลังตรวจสอบภาพ...
+            <div id="photo-checking" style="display:none; align-items:center; gap:8px; color:#856404; font-size:0.88rem; font-weight:600; margin-top:0.4rem; padding:6px 12px; background:#fff8e1; border-radius:8px; border:1px solid #ffe082;">
+              <span style="width:13px; height:13px; border:2px solid #b8860b; border-top-color:transparent; border-radius:50%; display:inline-block; animation:spin 0.7s linear infinite; flex-shrink:0;"></span>
+              กำลังตรวจสอบความปลอดภัยของภาพ...
             </div>
             <div id="photo-preview-wrap" style="margin-top:0.6rem;"></div>
           </div>
@@ -158,7 +161,8 @@
         const currentPhotoWrap = document.getElementById('current-photo-wrap');
         const saveBtn = document.getElementById('save-btn');
 
-        checking.style.display = 'block';
+        checking.style.display = 'flex';
+        checking.textContent = 'กำลังตรวจสอบความปลอดภัยของภาพ...';
         previewWrap.innerHTML = '';
         saveBtn.disabled = true;
 
@@ -179,26 +183,32 @@
           const data = await res.json();
 
           if (!data.safe) {
-            alert(`❌ ไม่สามารถอัปโหลดภาพได้\n${data.reason}\nกรุณาเลือกภาพอื่น`);
+            checking.style.display = 'none';
+            previewWrap.innerHTML = `
+              <div style="color:#9a0022; font-size:13px; font-weight:600; padding:8px 12px; background:rgba(220,0,50,0.08); border-radius:8px; margin-top:0.4rem;">
+                ❌ ${data.reason} — กรุณาเลือกภาพอื่น
+              </div>`;
             input.value = '';
-            previewWrap.innerHTML = '';
           } else {
-            // ซ่อนรูปเดิม แสดง preview รูปใหม่
+            // ซ่อนรูปเดิม แสดง preview รูปใหม่ พร้อม badge ✅
             if (currentPhotoWrap) currentPhotoWrap.style.display = 'none';
             const reader = new FileReader();
             reader.onload = function(e) {
               previewWrap.innerHTML = `
                 <p style="font-size:0.85rem; color:#888; margin-bottom:0.4rem;">รูปใหม่:</p>
-                <img src="${e.target.result}" style="max-height:140px; border-radius:10px; border:2px solid #f0a0c8;" />
-              `;
+                <div style="position:relative; display:inline-block;">
+                  <img src="${e.target.result}" style="max-height:140px; border-radius:10px; border:2px solid #f0a0c8; display:block;" />
+                  <span style="position:absolute; bottom:6px; left:50%; transform:translateX(-50%); background:rgba(0,160,80,0.85); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;">✅ ผ่านการตรวจ</span>
+                </div>`;
             };
             reader.readAsDataURL(input.files[0]);
+            checking.style.display = 'none';
           }
         } catch (e) {
           // ถ้า Vision API ล้มเหลวให้ผ่านไปก่อน ไม่บล็อก user
+          checking.style.display = 'none';
         }
 
-        checking.style.display = 'none';
         saveBtn.disabled = false;
       }
     </script>

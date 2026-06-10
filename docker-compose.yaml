@@ -1,5 +1,6 @@
 services:
   web:
+    image: viable-solution-web-app
     build:
       context: .
       dockerfile: Dockerfile
