@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "cloudinary",
     "viable_graph_app",
     "django_recaptcha",
-    "storages",
 ]
 
 MIDDLEWARE = [
