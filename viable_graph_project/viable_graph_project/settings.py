@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "cloudinary",
     "viable_graph_app",
     "django_recaptcha",
+    "sendgrid_backend",
 ]
 
 MIDDLEWARE = [
@@ -160,12 +161,18 @@ RECAPTCHA_PRIVATE_KEY = RECAPTCHA_SECRET_KEY
 SILENCED_SYSTEM_CHECKS = ["django_recaptcha.recaptcha_test_key_error"]
 
 # Email
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.gmail.com"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+if os.getenv("SENDGRID_API_KEY"):
+    EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+    SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+    SENDGRID_SANDBOX_MODE_IN_DEBUG = False
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 # Media files
 MEDIA_URL = "/media/"
