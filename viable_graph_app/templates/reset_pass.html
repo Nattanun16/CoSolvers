@@ -312,7 +312,7 @@
         <h1 class="page-title">Reset Password</h1>
 
         <section class="reset-panel">
-            <p class="panel-desc">We will send you an OTP number for resetting your password</p>
+            <p class="panel-desc">กรอก Student ID เพื่อรับรหัส OTP ทางอีเมล</p>
 
             {% if messages %}
             <div class="messages">
@@ -324,7 +324,9 @@
 
             <form class="reset-form" method="post" action="{% url 'reset_password' %}">
                 {% csrf_token %}
-
+                <div class="input-wrap">
+                    <input type="text" name="student_id" placeholder="Fill your Student ID">
+                </div>
                 <!-- OTP input -->
                 <div class="input-wrap">
                     <input type="text" name="otp" placeholder="Fill your OTP Number" maxlength="6"
