@@ -192,3 +192,4 @@ if os.getenv("CLOUDINARY_CLOUD_NAME"):
 
 # แก้บัค #10: Google Vision API Key อ่านจาก env ไม่ hardcode ใน code
 GOOGLE_VISION_API_KEY = os.getenv("GOOGLE_VISION_API_KEY", "")
+ADMIN_NOTIFY_EMAIL = os.getenv("ADMIN_NOTIFY_EMAIL", "")

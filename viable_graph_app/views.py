@@ -34,21 +34,30 @@ def home_view(request):
         description = request.POST.get("description", "").strip()
 
         if title and description:
-            Problem.objects.create(
+            problem = Problem.objects.create(
                 title=title,
                 category=category,
                 description=description,
                 reported_by=request.user,  # แก้: เพิ่ม reported_by
             )
-            messages.success(request, "ส่งรายงานปัญหาเรียบร้อยแล้ว")
+            notify_admin_new_problem(problem)
+            messages.success(
+                request, "ส่งรายงานปัญหาเรียบร้อยแล้ว รอการตรวจสอบจากแอดมิน"
+            )
             return redirect("home")
         else:
             messages.error(request, "กรุณากรอกหัวข้อและรายละเอียดให้ครบถ้วน")
 
-    total_problems = Problem.objects.count()
-    progress_problems = Problem.objects.filter(status="PROGRESS").count()
-    completed_problems = Problem.objects.filter(status="COMPLETED").count()
-    recent_problems = Problem.objects.all().order_by("-created_at")[:5]
+    total_problems = Problem.objects.filter(is_approved=True).count()
+    progress_problems = Problem.objects.filter(
+        is_approved=True, status="PROGRESS"
+    ).count()
+    completed_problems = Problem.objects.filter(
+        is_approved=True, status="COMPLETED"
+    ).count()
+    recent_problems = Problem.objects.filter(is_approved=True).order_by("-created_at")[
+        :5
+    ]
 
     context = {
         "recent_problems": recent_problems,
@@ -61,7 +70,11 @@ def home_view(request):
 
 # 2. API จ่ายข้อมูลดิบไปพล็อตกราฟ (ส่งข้อมูลเป็น JSON)
 def problem_chart_data(request):
-    data_query = Problem.objects.values("category").annotate(total=Count("id"))
+    data_query = (
+        Problem.objects.filter(is_approved=True)
+        .values("category")
+        .annotate(total=Count("id"))
+    )
 
     labels = []
     values = []
@@ -83,7 +96,7 @@ def search(request):
 
 
 def propose_solution(request):
-    problems = Problem.objects.all().order_by("-created_at")
+    problems = Problem.objects.filter(is_approved=True).order_by("-created_at")
 
     tag = request.GET.get("tag", "").strip()
     if tag:
@@ -228,6 +241,24 @@ def send_otp_email(subject, message, from_email, recipient_list):
     threading.Thread(target=_send, daemon=True).start()
 
 
+def notify_admin_new_problem(problem):
+    """แจ้งแอดมินเมื่อมีปัญหาใหม่รออนุมัติ"""
+    admin_email = getattr(settings, "ADMIN_NOTIFY_EMAIL", "")
+    if not admin_email:
+        return
+    send_otp_email(
+        subject=f"[Viable Graph] มีปัญหาใหม่รออนุมัติ: {problem.title}",
+        message=(
+            f"มีผู้ใช้รายงานปัญหาใหม่: {problem.title}\n"
+            f"หมวดหมู่: {problem.get_category_display()}\n"
+            f"ผู้รายงาน: {problem.reported_by}\n\n"
+            f"กรุณาเข้าไปตรวจสอบและอนุมัติที่หน้า Admin (/admin/viable_graph_app/problem/)"
+        ),
+        from_email=settings.EMAIL_HOST_USER,
+        recipient_list=[admin_email],
+    )
+
+
 @login_required(login_url="login")
 def profile(request):
     my_problems = Problem.objects.filter(reported_by=request.user)
@@ -289,7 +320,7 @@ def define_problem(request):
                 )
                 return render(request, "define_problem.html")
 
-        Problem.objects.create(
+        problem = Problem.objects.create(
             title=title,
             category=category,
             description=description,
@@ -299,7 +330,8 @@ def define_problem(request):
             photo=photo,
             reported_by=request.user,
         )
-        messages.success(request, "ส่งรายงานปัญหาเรียบร้อยแล้ว")
+        notify_admin_new_problem(problem)
+        messages.success(request, "ส่งรายงานปัญหาเรียบร้อยแล้ว รอการตรวจสอบจากแอดมิน")
         return redirect("home")
 
     return render(request, "define_problem.html")
@@ -397,16 +429,16 @@ def reset_pass(request):
             request.session["reset_otp_time"] = time.time()
             email = request.session.get("reset_email", "")
             if email:
-                #try:
-                    send_otp_email(
-                        subject="OTP รีเซ็ตรหัสผ่าน",
-                        message=f"รหัส OTP ของคุณคือ: {otp}\nหมดอายุใน 5 นาที",
-                        from_email=settings.EMAIL_HOST_USER,
-                        recipient_list=[email],
-                        #fail_silently=False,
-                    )
-                #except Exception as e:
-                    #return JsonResponse({"status": "error", "message": str(e)})
+                # try:
+                send_otp_email(
+                    subject="OTP รีเซ็ตรหัสผ่าน",
+                    message=f"รหัส OTP ของคุณคือ: {otp}\nหมดอายุใน 5 นาที",
+                    from_email=settings.EMAIL_HOST_USER,
+                    recipient_list=[email],
+                    # fail_silently=False,
+                )
+            # except Exception as e:
+            # return JsonResponse({"status": "error", "message": str(e)})
             return JsonResponse({"status": "sent"})
 
         student_id = request.POST.get("student_id", "").strip()
@@ -617,8 +649,10 @@ def solution_chart_data(request):
 
 def problems_ranked(request):
     """ส่งรายชื่อปัญหาทั้งหมดเรียงตามจำนวน comment"""
-    problems = Problem.objects.annotate(comment_count=Count("comments")).order_by(
-        "-comment_count"
+    problems = (
+        Problem.objects.filter(is_approved=True)
+        .annotate(comment_count=Count("comments"))
+        .order_by("-comment_count")
     )
     return JsonResponse(
         {

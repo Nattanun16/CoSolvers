@@ -59,6 +59,7 @@ class Problem(models.Model):
         if not self.tags:
             return []
         return [t.strip() for t in self.tags.split(",") if t.strip()]
+    is_approved = models.BooleanField(default=False)
 
 
 class Suggestion(models.Model):
