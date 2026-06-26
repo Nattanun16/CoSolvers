@@ -647,7 +647,7 @@
       <div class="right-panel">
         <div class="comment-header">
           <span class="comment-date">{{ problem.created_at|date:'d/m/y' }}</span>
-          <span class="comment-title">คอมเม้นต์</span>
+          <span class="comment-title">ความคิดเห็น</span>
         </div>
 
         <div class="comments-list" id="comments-list">
@@ -681,7 +681,12 @@
                   <div class="action-divider"></div>
 
                   {% if comment.author == user %}
-                    <button class="action-btn" onclick="toggleReply('edit-{{ comment.id }}')">แก้ไขความคิดเห็น</button>
+                    <button class="action-btn" onclick="toggleReply('edit-{{ comment.id }}')">✏️ แก้ไข</button>
+                    <div class="action-divider"></div>
+                    <form method="post" action="{% url 'delete_comment' comment.id %}" style="display:inline;">
+                      {% csrf_token %}
+                      <button class="action-btn" type="submit">🗑️</button>
+                    </form>
                     <div class="action-divider"></div>
                   {% else %}
                     <form method="post" action="{% url 'report_comment' comment.id %}" style="display:inline;">
@@ -792,7 +797,7 @@
         {% if user.is_authenticated %}
           <form method="post" action="{% url 'add_comment' problem.id %}" class="comment-input-wrap">
             {% csrf_token %}
-            <input class="comment-input" type="text" name="text" placeholder="แสดงความคิดเห็นของคุณ" required />
+            <input class="comment-input" type="text" name="text" placeholder="your comment" required />
             <button class="comment-submit" type="submit">↑</button>
           </form>
         {% else %}
@@ -807,7 +812,7 @@
     <div class="modal-overlay" id="rating-modal">
       <div class="modal-box">
         <button class="modal-close" onclick="closeRating()">✕</button>
-        <div class="modal-title">คุณคิดเห็นอย่างไรกับแนวทางแก้ไขปัญหานี้?</div>
+        <div class="modal-title">What do you think?</div>
         <form method="post" id="rating-form" action="">
           {% csrf_token %}
           <input type="hidden" name="rating" id="rating-value" value="0" />
