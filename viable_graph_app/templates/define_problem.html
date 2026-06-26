@@ -82,9 +82,9 @@
       }
       
       .title-big {
-        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-size: clamp(1.6rem, 3.2vw, 2.6rem);
         font-weight: 700;
-        line-height: 1;
+        line-height: 1.15;
       }
       
       /* tabs on divider */
@@ -410,7 +410,7 @@
         background: rgba(220, 0, 50, 0.08);
         color: #9a0022;
       }
-
+      
       /* checking overlay on gallery */
       .checking-overlay {
         display: flex;
@@ -438,8 +438,20 @@
         animation: spin 0.7s linear infinite;
         flex-shrink: 0;
       }
-      @keyframes spin  { to { transform: rotate(360deg); } }
-      @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
       
       @media (max-width: 768px) {
         .page-wrap {
@@ -480,8 +492,6 @@
               <span class="title-problems">ของคุณ</span>
             </div>
           </div>
-
-
 
           <div class="fields-wrap">
             <!-- TAB: Location & Tags -->
@@ -569,88 +579,95 @@
         document.getElementById('tab-' + tab).classList.add('active')
         el.classList.add('active')
       }
-
+      
       // ฟังก์ชันตรวจสอบภาพก่อน preview ด้วย Google Vision API
       async function previewImages(input) {
-        if (!input.files || !input.files.length) return;
-
-        const gallery = document.getElementById('preview-gallery');
-        const sendBtn = document.querySelector('.send-btn');
-
+        if (!input.files || !input.files.length) return
+      
+        const gallery = document.getElementById('preview-gallery')
+        const sendBtn = document.querySelector('.send-btn')
+      
         // ล้าง preview เดิม (คงปุ่ม upload card ไว้)
-        Array.from(gallery.children).forEach(child => {
-          if (!child.classList.contains('img-upload-card')) child.remove();
-        });
-
+        Array.from(gallery.children).forEach((child) => {
+          if (!child.classList.contains('img-upload-card')) child.remove()
+        })
+      
         // แสดง loading พร้อมปิดปุ่ม Submit
-        const loadingMsg = document.createElement('div');
-        loadingMsg.className = 'checking-overlay';
-        loadingMsg.textContent = 'กำลังตรวจสอบความปลอดภัยของภาพ...';
-        gallery.appendChild(loadingMsg);
-        if (sendBtn) { sendBtn.disabled = true; sendBtn.style.opacity = '0.6'; }
-
+        const loadingMsg = document.createElement('div')
+        loadingMsg.className = 'checking-overlay'
+        loadingMsg.textContent = 'กำลังตรวจสอบความปลอดภัยของภาพ...'
+        gallery.appendChild(loadingMsg)
+        if (sendBtn) {
+          sendBtn.disabled = true
+          sendBtn.style.opacity = '0.6'
+        }
+      
         // ดึง CSRF token จาก cookie
-        const csrfToken = document.cookie
-          .split('; ')
-          .find(row => row.startsWith('csrftoken='))
-          ?.split('=')[1] || '';
-
+        const csrfToken =
+          document.cookie
+            .split('; ')
+            .find((row) => row.startsWith('csrftoken='))
+            ?.split('=')[1] || ''
+      
         // รับแค่ไฟล์แรก (backend รองรับรูปเดียว)
-        const file = input.files[0];
-        const formData = new FormData();
-        formData.append('photo', file);
-
-        let passed = true;
+        const file = input.files[0]
+        const formData = new FormData()
+        formData.append('photo', file)
+      
+        let passed = true
         try {
           const res = await fetch('/api/check-image-safety/', {
             method: 'POST',
             headers: { 'X-CSRFToken': csrfToken },
-            body: formData,
-          });
-          const data = await res.json();
+            body: formData
+          })
+          const data = await res.json()
           if (!data.safe) {
             // แจ้งเตือนแบบ inline แทน alert
-            const errDiv = document.createElement('div');
-            errDiv.style.cssText = 'color:#9a0022; font-size:13px; font-weight:600; padding:8px 14px; background:rgba(220,0,50,0.08); border-radius:8px; grid-column:span 2;';
-            errDiv.textContent = `❌ ${data.reason} — กรุณาเลือกภาพอื่น`;
-            gallery.appendChild(errDiv);
-            passed = false;
+            const errDiv = document.createElement('div')
+            errDiv.style.cssText = 'color:#9a0022; font-size:13px; font-weight:600; padding:8px 14px; background:rgba(220,0,50,0.08); border-radius:8px; grid-column:span 2;'
+            errDiv.textContent = `❌ ${data.reason} — กรุณาเลือกภาพอื่น`
+            gallery.appendChild(errDiv)
+            passed = false
           }
         } catch (e) {
           // ถ้า fetch ล้มเหลว ให้ผ่านไปก่อน (ไม่บล็อก user)
         }
-
+      
         // ลบ loading message
-        const checking = gallery.querySelector('.checking-overlay');
-        if (checking) checking.remove();
-
+        const checking = gallery.querySelector('.checking-overlay')
+        if (checking) checking.remove()
+      
         // คืน state ปุ่ม
-        if (sendBtn) { sendBtn.disabled = false; sendBtn.style.opacity = ''; }
-
-        if (!passed) {
-          input.value = '';
-          return;
+        if (sendBtn) {
+          sendBtn.disabled = false
+          sendBtn.style.opacity = ''
         }
-
+      
+        if (!passed) {
+          input.value = ''
+          return
+        }
+      
         // แสดง preview ภาพที่ผ่านการตรวจ พร้อม badge ✅
-        const reader = new FileReader();
+        const reader = new FileReader()
         reader.onload = function (e) {
-          const wrap = document.createElement('div');
-          wrap.style.cssText = 'position:relative; width:130px; height:140px; flex-shrink:0;';
-          const div = document.createElement('div');
-          div.style.cssText = 'width:130px; height:140px; border-radius:12px; overflow:hidden; border:2px solid #ff69b4;';
-          const img = document.createElement('img');
-          img.src = e.target.result;
-          img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-          const badge = document.createElement('span');
-          badge.textContent = '✅ ผ่านการตรวจ';
-          badge.style.cssText = 'position:absolute; bottom:4px; left:50%; transform:translateX(-50%); background:rgba(0,160,80,0.85); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;';
-          div.appendChild(img);
-          wrap.appendChild(div);
-          wrap.appendChild(badge);
-          gallery.appendChild(wrap);
-        };
-        reader.readAsDataURL(file);
+          const wrap = document.createElement('div')
+          wrap.style.cssText = 'position:relative; width:130px; height:140px; flex-shrink:0;'
+          const div = document.createElement('div')
+          div.style.cssText = 'width:130px; height:140px; border-radius:12px; overflow:hidden; border:2px solid #ff69b4;'
+          const img = document.createElement('img')
+          img.src = e.target.result
+          img.style.cssText = 'width:100%; height:100%; object-fit:cover;'
+          const badge = document.createElement('span')
+          badge.textContent = '✅ ผ่านการตรวจ'
+          badge.style.cssText = 'position:absolute; bottom:4px; left:50%; transform:translateX(-50%); background:rgba(0,160,80,0.85); color:#fff; font-size:10px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap;'
+          div.appendChild(img)
+          wrap.appendChild(div)
+          wrap.appendChild(badge)
+          gallery.appendChild(wrap)
+        }
+        reader.readAsDataURL(file)
       }
       
       // Set max date to today
