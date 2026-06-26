@@ -22,7 +22,7 @@ class ProblemAdmin(admin.ModelAdmin):
 
     def approve_problems(self, request, queryset):
         queryset.update(is_approved=True)
-    approve_problems.short_description = "✅ อนุมัติปัญหาที่เลือก"
+    approve_problems.short_description = "✅ แสฟีอนุมัติปัญหาที่เลือก"
 
     def reject_problems(self, request, queryset):
         queryset.update(is_approved=False)
