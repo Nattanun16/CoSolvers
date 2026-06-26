@@ -264,6 +264,21 @@ def notify_admin_new_problem(problem):
 def profile(request):
     my_problems = Problem.objects.filter(reported_by=request.user)
 
+    # ข้อเสนอแนวทางแก้ปัญหาของฉัน = คอมเมนต์ที่ user คนนี้เคยเขียนไว้ในปัญหาต่างๆ
+    my_comments = (
+        Comment.objects.filter(author=request.user)
+        .select_related("problem")
+        .order_by("-created_at")
+    )
+    my_purposes = [
+        {
+            "title": c.problem.title if c.problem else "",
+            "comment": c.text,
+            "rating": c.rating,  # ค่าเฉลี่ยดาวที่คนอื่นให้คอมเมนต์นี้ (property จาก model)
+        }
+        for c in my_comments
+    ]
+
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     profile_photo = profile.photo.url if profile.photo else None
 
@@ -273,7 +288,7 @@ def profile(request):
         {
             "my_problems": my_problems,
             "score": 0,
-            "my_purposes": [],
+            "my_purposes": my_purposes,
             "profile_photo": profile_photo,
             "stars": range(1, 6),
         },
