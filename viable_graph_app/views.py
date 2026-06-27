@@ -753,9 +753,10 @@ def problem_solutions_data(request):
     if cached:
         return JsonResponse(cached)
 
-    comments = list(
-        Comment.objects.filter(problem=problem, parent=None).order_by("-rating")
-    )
+    comments = list(Comment.objects.filter(problem=problem, parent=None))
+    # 'rating' เป็น property (คำนวณจาก star_ratings) ไม่ใช่ field จริงในฐานข้อมูล
+    # จึงต้อง sort ด้วย Python แทนการใช้ .order_by() ของ Django ORM
+    comments.sort(key=lambda c: c.rating, reverse=True)
 
     if not comments:
         return JsonResponse({"labels": [], "data": [], "details": []})
