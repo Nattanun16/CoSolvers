@@ -35,7 +35,9 @@ def cluster_comments(comments: list) -> list[dict]:
         except Exception as e:
             if "429" in str(e) or "quota" in str(e).lower():
                 wait = 5 * (attempt + 1)
-                print(f"[clustering] rate limit -- waiting {wait}s (attempt {attempt+1}/3)")
+                print(
+                    f"[clustering] rate limit -- waiting {wait}s (attempt {attempt+1}/3)"
+                )
                 time.sleep(wait)
             else:
                 print(f"[clustering] Gemini error: {e} -- falling back to no-grouping")
@@ -46,15 +48,11 @@ def cluster_comments(comments: list) -> list[dict]:
 
 def _call_gemini(comments: list) -> list[list[int]]:
     n = len(comments)
-    numbered = "\n".join(
-        f"{i}. {c.text}" for i, c in enumerate(comments)
-    )
+    numbered = "\n".join(f"{i}. {c.text}" for i, c in enumerate(comments))
     valid_indices = list(range(n))
 
     prompt = (
-        f"มีวิธีแก้ปัญหาทั้งหมด {n} รายการ (index 0 ถึง {n-1}):\n"
-        + numbered
-        + "\n\n"
+        f"มีวิธีแก้ปัญหาทั้งหมด {n} รายการ (index 0 ถึง {n-1}):\n" + numbered + "\n\n"
         "รวมกลุ่มเฉพาะวิธีแก้ที่ใช้ **วิธีการเดียวกัน** เท่านั้น\n"
         "ตัวอย่างที่ **ควร** รวมกลุ่ม: 'เพิ่มท่อระบายน้ำ' กับ 'ต้องการท่อระบายน้ำมากกว่านี้' (วิธีเดียวกัน ต่างแค่คำ)\n"
         "ตัวอย่างที่ **ไม่ควร** รวมกลุ่ม: 'เพิ่มท่อระบายน้ำ' กับ 'ขุดลอกท่อที่อุดตัน' (คนละวิธี แม้จะเกี่ยวกับท่อเหมือนกัน)\n"
@@ -63,7 +61,7 @@ def _call_gemini(comments: list) -> list[list[int]]:
         f"กฎ:\n"
         f"- index ที่ใช้ได้มีเฉพาะ: {valid_indices} เท่านั้น ห้ามใช้ตัวเลขอื่น\n"
         f"- output ต้องมี index ครบทุกตัวจาก 0 ถึง {n-1} ไม่มีซ้ำ ไม่มีขาด\n"
-        "- ตอบด้วย JSON เท่านั้น ไม่ต้องมีคำอธิบาย รูปแบบ: {\"groups\": [[0,2],[1],[3]]}"
+        '- ตอบด้วย JSON เท่านั้น ไม่ต้องมีคำอธิบาย รูปแบบ: {"groups": [[0,2],[1],[3]]}'
     )
 
     resp = requests.post(
@@ -124,7 +122,9 @@ def _build_result(comments: list, groups_raw: list[list[int]]) -> list[dict]:
 def _make_group_dict(group: list) -> dict:
     representative = group[0].text
     total_rating = sum(c.rating for c in group)
-    short_label = (representative[:20] + "...") if len(representative) > 20 else representative
+    short_label = (
+        (representative[:20] + "...") if len(representative) > 20 else representative
+    )
 
     return {
         "representative": representative,
