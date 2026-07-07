@@ -343,18 +343,20 @@
       }
       
       .purpose-item {
-        cursor: pointer;
-        transition: transform 0.15s, box-shadow 0.15s;
-      }
-
-      .purpose-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 0, 122, 0.15);
-      }
+        display: block;
+        text-decoration: none;
+        color: inherit;
         background: #fffde0;
         border: 2px solid #1a1a1a;
         border-radius: 16px;
         overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+      
+      .purpose-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 0, 122, 0.15);
       }
       
       .purpose-item-header {
@@ -679,7 +681,7 @@
           <div class="divider"></div>
           <div class="purpose-list">
             {% for purpose in my_purposes %}
-              <a href="{% url 'problem_detail_public' purpose.problem_id %}" class="purpose-item" style="text-decoration:none; display:block;">
+              <a href="{% url 'problem_detail_public' purpose.problem_id %}" class="purpose-item">
                 <div class="purpose-item-header">
                   <span class="purpose-title">{{ purpose.title }}</span>
                   <span class="stars">
