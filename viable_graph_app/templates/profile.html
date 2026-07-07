@@ -343,6 +343,14 @@
       }
       
       .purpose-item {
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+      }
+
+      .purpose-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 0, 122, 0.15);
+      }
         background: #fffde0;
         border: 2px solid #1a1a1a;
         border-radius: 16px;
@@ -671,7 +679,7 @@
           <div class="divider"></div>
           <div class="purpose-list">
             {% for purpose in my_purposes %}
-              <div class="purpose-item">
+              <a href="{% url 'problem_detail_public' purpose.problem_id %}" class="purpose-item" style="text-decoration:none; display:block;">
                 <div class="purpose-item-header">
                   <span class="purpose-title">{{ purpose.title }}</span>
                   <span class="stars">
@@ -686,7 +694,7 @@
                   <span class="purpose-from">from ℹ️</span>
                 </div>
                 <div class="purpose-comment">{{ purpose.comment|default:'' }}</div>
-              </div>
+              </a>
             {% empty %}
               <p style="color:#a07000; font-size:0.95rem;">ยังไม่มีข้อเสนอแนวทางแก้ปัญหา</p>
             {% endfor %}

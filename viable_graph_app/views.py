@@ -274,7 +274,8 @@ def profile(request):
         {
             "title": c.problem.title if c.problem else "",
             "comment": c.text,
-            "rating": c.rating,  # ค่าเฉลี่ยดาวที่คนอื่นให้คอมเมนต์นี้ (property จาก model)
+            "rating": c.rating,
+            "problem_id": c.problem.id if c.problem else None,
         }
         for c in my_comments
     ]
